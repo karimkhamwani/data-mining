@@ -1,0 +1,142 @@
+---
+title: "Final Project"
+author: "Karim and Mustafa"
+date: "10/27/2022"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+# library(ggplot2)
+# library(psych)
+# library(corrplot)
+# library(caret)
+# library(glmnet)
+# library(leaps)
+# library(reshape2)
+# library(gridExtra)
+# install.packages("Hmisc")
+# install.packages("pastecs")
+# install.packages("ggplot2")
+library(Hmisc)
+library(pastecs)
+library(ggplot2)
+library(plyr)
+```
+
+
+```{r}
+# reading file
+caravan_insurance = readr::read_csv("caravan-insurance-challenge.csv")
+
+# training data
+caravan_insurance_train = (caravan_insurance[caravan_insurance$ORIGIN == "train",])
+
+#testing data
+caravan_insurance_test = (caravan_insurance[caravan_insurance$ORIGIN == "test",])
+```
+
+# Step 1 Data Visulation and exploration
+
+```{r}
+dimension = dim(caravan_insurance)
+# total number of observations are 9822
+# total number of variables are 87 
+
+totalRows = dimension[1]
+
+str(caravan_insurance)
+# data type of 86 variables is number and 1 variable is char, our target variable is number of policies bought remaining variables are categorical numeric.
+
+head(caravan_insurance)
+# explore top 5 rows
+```
+
+# Descriptive analysis
+```{r}
+# summary of main data set
+stat.desc(caravan_insurance)
+
+# missing values in main data set
+paste0("Total missing values:", sum(is.na(caravan_insurance)))
+
+# summary of training data set
+stat.desc(caravan_insurance_train)
+
+# checking missing values in training data set
+paste0("Total missing values in training:", sum(is.na(caravan_insurance_train)))
+
+
+# summary of test data set
+stat.desc(caravan_insurance_test)
+
+# checking missing values in training data set
+paste0("Total missing values in test:", sum(is.na(caravan_insurance_test)))
+
+```
+
+
+# Plot graphs
+```{r}
+library(ggplot2)
+library(plyr)
+
+
+unInsuredRows = caravan_insurance[caravan_insurance$CARAVAN == 0,]
+insuredRows = caravan_insurance[caravan_insurance$CARAVAN == 1,]
+
+
+peopleNotInsuredWithCaravan  <- nrow(unInsuredRows);
+peopleInsuredWithCaravan = nrow(insuredRows);
+
+
+ratioOfPeopleWhoDontBought = sum_peopleNotInsuredWithCaravan/totalRows * 100
+ratioOfPeopleWhoBought = sum_peopleInsuredWithCaravan/totalRows * 100
+# 5.96% who bought insurance vs 94% who didn't buy the insurance, by statistics it looks like company is in loss people are not interested in buying they have to something to improve.
+
+dat <- data.frame(
+  Policy_status = factor(c("Not Insured","Insured"), levels=c("Not Insured","Insured")),
+  Count = c( sum_peopleNotInsuredWithCaravan , sum_peopleInsuredWithCaravan)
+)
+
+ggplot(data=dat, aes(x=Policy_status, y=Count, fill=Policy_status)) +
+  geom_bar(colour="red", stat="identity")
+
+```
+
+# Now we will see what type of customers bought the insurance?
+
+```{r}
+hist(insuredRows$MOSHOOFD, main="Customer main type",
+     xlab = "Customer main type", col="blue")
+
+# interesting insights customer with type Successful hedonists bought more policy as compare to an others, also customer with Average Family didn't buy any insurance. so company has to offer more benefits to average familes so they can buy it
+
+hist(unInsuredRows$MOSHOOFD, main="Customer main type",
+     xlab = "Customer main type", col="blue")
+# Family with grown ups has higher number as they didn't buy insurance at all. it might be possible they have children and other expensive so they can't afford it?
+```
+
+# Now we will see people who bought in what their martial status is
+```{r}
+isMarried = sum(insuredRows$MRELGE  != 0)
+notMarried = nrow(insuredRows) - isMarried
+# from total insured 586, 581 are married and 5 are not married
+
+marriedRows = insuredRows[insuredRows$MRELGE != 0,]
+unMarriedRows = insuredRows[insuredRows$MRELGE == 0,]
+
+# plot histogram
+hist(married$MRELGE, main="Married people who bought insurance",
+     xlab = "Married people who bought insurance", col="yellow")
+# married type of 7 bought most and 1 least
+
+
+```
+
+
+
