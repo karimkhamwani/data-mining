@@ -99,11 +99,11 @@ ratioOfPeopleWhoBought = peopleInsuredWithCaravan/totalRows * 100
 # 5.96% who bought insurance vs 94% who didn't buy the insurance, by statistics it looks like company is in loss people are not interested in buying they have to something to improve.
 
 dat <- data.frame(
-  Policy_status = factor(c("Not Insured","Insured"), levels=c("Not Insured","Insured")),
+  policy_status = factor(c("Not Insured","Insured"), levels=c("Not Insured","Insured")),
   Count = c( peopleNotInsuredWithCaravan , peopleInsuredWithCaravan)
 )
 
-ggplot(data=dat, aes(x=Policy_status, y=Count, fill=Policy_status)) +
+ggplot(data=dat, aes(x=policy_status, y=Count, fill=policy_status)) +
   geom_bar(colour="red", stat="identity")
 
 ```
