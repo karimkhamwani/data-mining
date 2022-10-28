@@ -94,13 +94,13 @@ peopleNotInsuredWithCaravan  <- nrow(unInsuredRows);
 peopleInsuredWithCaravan = nrow(insuredRows);
 
 
-ratioOfPeopleWhoDontBought = sum_peopleNotInsuredWithCaravan/totalRows * 100
-ratioOfPeopleWhoBought = sum_peopleInsuredWithCaravan/totalRows * 100
+ratioOfPeopleWhoDontBought = peopleNotInsuredWithCaravan/totalRows * 100
+ratioOfPeopleWhoBought = peopleInsuredWithCaravan/totalRows * 100
 # 5.96% who bought insurance vs 94% who didn't buy the insurance, by statistics it looks like company is in loss people are not interested in buying they have to something to improve.
 
 dat <- data.frame(
   Policy_status = factor(c("Not Insured","Insured"), levels=c("Not Insured","Insured")),
-  Count = c( sum_peopleNotInsuredWithCaravan , sum_peopleInsuredWithCaravan)
+  Count = c( peopleNotInsuredWithCaravan , peopleInsuredWithCaravan)
 )
 
 ggplot(data=dat, aes(x=Policy_status, y=Count, fill=Policy_status)) +
@@ -111,13 +111,13 @@ ggplot(data=dat, aes(x=Policy_status, y=Count, fill=Policy_status)) +
 # Now we will see what type of customers bought the insurance?
 
 ```{r}
-hist(insuredRows$MOSHOOFD, main="Customer main type",
-     xlab = "Customer main type", col="blue")
+hist(insuredRows$MOSHOOFD, main="Insured Customer type",
+     xlab = "Insured Customer type", col="blue")
 
 # interesting insights customer with type Successful hedonists bought more policy as compare to an others, also customer with Average Family didn't buy any insurance. so company has to offer more benefits to average familes so they can buy it
 
-hist(unInsuredRows$MOSHOOFD, main="Customer main type",
-     xlab = "Customer main type", col="blue")
+hist(unInsuredRows$MOSHOOFD, main="Un Insured Customer type",
+     xlab = "Un Insured Customer type", col="blue")
 # Family with grown ups has higher number as they didn't buy insurance at all. it might be possible they have children and other expensive so they can't afford it?
 ```
 
@@ -131,7 +131,7 @@ marriedRows = insuredRows[insuredRows$MRELGE != 0,]
 unMarriedRows = insuredRows[insuredRows$MRELGE == 0,]
 
 # plot histogram
-hist(married$MRELGE, main="Married people who bought insurance",
+hist(marriedRows$MRELGE, main="Married people who bought insurance",
      xlab = "Married people who bought insurance", col="yellow")
 # married type of 7 bought most and 1 least
 
