@@ -22,6 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("Hmisc")
 # install.packages("pastecs")
 # install.packages("ggplot2")
+# install.packages("Hmisc")
+library("Hmisc")
 library(Hmisc)
 library(pastecs)
 library(ggplot2)
@@ -86,9 +88,10 @@ library(ggplot2)
 library(plyr)
 
 
+
 unInsuredRows = caravan_insurance[caravan_insurance$CARAVAN == 0,]
 insuredRows = caravan_insurance[caravan_insurance$CARAVAN == 1,]
-
+df = 
 
 peopleNotInsuredWithCaravan  <- nrow(unInsuredRows);
 peopleInsuredWithCaravan = nrow(insuredRows);
@@ -121,22 +124,89 @@ hist(unInsuredRows$MOSHOOFD, main="Un Insured Customer type",
 # Family with grown ups has higher number as they didn't buy insurance at all. it might be possible they have children and other expensive so they can't afford it?
 ```
 
-# Now we will see people who bought in what their martial status is
+
 ```{r}
-isMarried = sum(insuredRows$MRELGE  != 0)
-notMarried = nrow(insuredRows) - isMarried
-# from total insured 586, 581 are married and 5 are not married
+hist(caravan_insurance$MOSTYPE, main="Customer Subtype",
+     xlab = "Customer Subtype", col="blue")
+hist(caravan_insurance$MAANTHUI, main="Number of houses",
+     xlab = "Number of houses", col="blue")
+hist(caravan_insurance$MOSHOOFD, main="Customer Main type",
+     xlab = "Customer Main type", col="green")
+hist(caravan_insurance$MGEMOMV, main="Average Household size",
+     xlab = "Average Household size", col="green")
+hist(caravan_insurance$MGEMLEEF, main="Average Age",
+     xlab = "Average Age", col="green")
+```
 
-marriedRows = insuredRows[insuredRows$MRELGE != 0,]
-unMarriedRows = insuredRows[insuredRows$MRELGE == 0,]
 
-# plot histogram
-hist(marriedRows$MRELGE, main="Married people who bought insurance",
-     xlab = "Married people who bought insurance", col="yellow")
-# married type of 7 bought most and 1 least
+# corelation analysis.
 
+```{r}
+set = caravan_insurance
+set$ORIGIN = NULL
+rcorr(as.matrix(set))
+#P1 = MOSTYPE (Customer Subtype) -0.06
+# customer subtype has weak corelation with response variable CARVAN so we can use for further analysis
+
+#P3 = MGEMOMV (Avg size household) 0.05
+#P4 = MGEMLEEF (Average age) 0.00
+#P5 = MOSHOOFD (Customer Main Type) -0.06
+#P2 = MAANTHUI (Number of houses)  0.00
+```
+
+# Convert Number of houses into dummies
+
+```{r}
+head(caravan_insurance, 10)
+caravan_insurance$MAANTHUI = replace(caravan_insurance$MAANTHUI, caravan_insurance$MAANTHUI==3, 2)
+
+caravan_insurance$hasOneHouse = ifelse(caravan_insurance$MAANTHUI ==1, 1, 0)
+caravan_insurance$hasTwoHouses = ifelse(caravan_insurance$MAANTHUI ==2, 1, 0)
+```
+
+
+# Convert Ages into dummies
+```{r}
+caravan_insurance$MGEMLEEF = replace(caravan_insurance$MGEMLEEF, caravan_insurance$MGEMLEEF==1, 2)
+caravan_insurance$MGEMLEEF = replace(caravan_insurance$MGEMLEEF, caravan_insurance$MGEMLEEF==5, 4)
+
+caravan_insurance$earlyAge = ifelse(caravan_insurance$MGEMLEEF == 2, 1, 0)
+caravan_insurance$middleAge = ifelse(caravan_insurance$MGEMLEEF == 3, 1, 0)
+caravan_insurance$oldAge = ifelse(caravan_insurance$MGEMLEEF == 4, 1, 0)
+
+
+barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$earlyAge),
+main="Early age",
+xlab="age",
+ylab="Count",
+border="black",
+col="blue"
+)
+
+barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$middleAge),
+main="Middle age",
+xlab="age",
+ylab="Count",
+border="black",
+col="pink"
+)
+
+barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$oldAge),
+main="Old age",
+xlab="age",
+ylab="Count",
+border="black",
+col="orange"
+)
+
+# Middle age people bought most policies
 
 ```
 
+
+# Convert Religion into binary.
+```{r}
+
+```
 
 
