@@ -187,11 +187,11 @@ caravan_insurance$successful = ifelse(caravan_insurance$MOSTYPE %in% c(1,2,3,4,5
 
 
 dat <- data.frame(
-  policy_status = factor(c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful"), levels=c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful")),
+  Categorized_Customers = factor(c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful"), levels=c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful")),
   Count = c( sum(caravan_insurance$averageFamily), sum(caravan_insurance$loners), sum(caravan_insurance$conservativeFamilies), sum(caravan_insurance$crusingSeniors), sum(caravan_insurance$drivenGrowers), sum(caravan_insurance$grownups), sum(caravan_insurance$framers), sum(caravan_insurance$livingWell), sum(caravan_insurance$retired), sum(caravan_insurance$successful) )
 )
 
-ggplot(data=dat, aes(x=policy_status, y=Count, fill=policy_status)) +
+ggplot(data=dat, aes(x=Categorized_Customers, y=Count, fill=Categorized_Customers)) +
   geom_bar(colour="red", stat="identity")
 
 ```
