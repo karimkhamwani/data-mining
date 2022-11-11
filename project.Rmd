@@ -62,6 +62,7 @@ head(caravan_insurance)
 ```{r}
 # summary of main data set
 stat.desc(caravan_insurance)
+summary(caravan_insurance)
 
 # missing values in main data set
 paste0("Total missing values:", sum(is.na(caravan_insurance)))
@@ -136,6 +137,9 @@ hist(caravan_insurance$MGEMOMV, main="Average Household size",
      xlab = "Average Household size", col="green")
 hist(caravan_insurance$MGEMLEEF, main="Average Age",
      xlab = "Average Age", col="green")
+
+boxplot(caravan_insurance$MGEMOMV, xlab = "Household", ylab = "Household Size", main ="Household")
+
 ```
 
 
@@ -154,18 +158,46 @@ rcorr(as.matrix(set))
 #P2 = MAANTHUI (Number of houses)  0.00
 ```
 
-# Convert Number of houses into dummies
-
+# Dummies conversion
+# Number of Houses
 ```{r}
-head(caravan_insurance, 10)
-caravan_insurance$MAANTHUI = replace(caravan_insurance$MAANTHUI, caravan_insurance$MAANTHUI==3, 2)
+table(caravan_insurance$MAANTHUI)
 
+caravan_insurance$MAANTHUI = replace(caravan_insurance$MAANTHUI, caravan_insurance$MAANTHUI==3, 2)
 caravan_insurance$hasOneHouse = ifelse(caravan_insurance$MAANTHUI ==1, 1, 0)
 caravan_insurance$hasTwoHouses = ifelse(caravan_insurance$MAANTHUI ==2, 1, 0)
+caravan_insurance$has4Or5Houses = ifelse(caravan_insurance$MAANTHUI == 4 | caravan_insurance$MAANTHUI == 5, 1, 0)
+caravan_insurance$moreThan5Houses = ifelse(caravan_insurance$MAANTHUI > 5, 1, 0)
+
+# by looking frequencies of houses we categorized houses into dummies.
+```
+
+# Grouping sub customer to meanful customer type.
+```{r}
+caravan_insurance$averageFamily = ifelse(caravan_insurance$MOSTYPE %in% c(12,11,9,10,13), 1, 0)
+caravan_insurance$loners = ifelse(caravan_insurance$MOSTYPE %in% c(17,15,18,16,19), 1, 0)
+caravan_insurance$conservativeFamilies = ifelse(caravan_insurance$MOSTYPE %in% c(39,38), 1, 0)
+caravan_insurance$crusingSeniors = ifelse(caravan_insurance$MOSTYPE %in% c(26,25,28,27), 1, 0)
+caravan_insurance$drivenGrowers = ifelse(caravan_insurance$MOSTYPE %in% c(6,7,8), 1, 0)
+caravan_insurance$grownups = ifelse(caravan_insurance$MOSTYPE %in% c(33,34,35,36,37), 1, 0)
+caravan_insurance$framers = ifelse(caravan_insurance$MOSTYPE %in% c(40,41), 1, 0)
+caravan_insurance$livingWell = ifelse(caravan_insurance$MOSTYPE %in% c(20,21,22,23,24), 1, 0)
+caravan_insurance$retired = ifelse(caravan_insurance$MOSTYPE %in% c(29,30,31,32), 1, 0)
+caravan_insurance$successful = ifelse(caravan_insurance$MOSTYPE %in% c(1,2,3,4,5), 1, 0)
+
+
+dat <- data.frame(
+  policy_status = factor(c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful"), levels=c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful")),
+  Count = c( sum(caravan_insurance$averageFamily), sum(caravan_insurance$loners), sum(caravan_insurance$conservativeFamilies), sum(caravan_insurance$crusingSeniors), sum(caravan_insurance$drivenGrowers), sum(caravan_insurance$grownups), sum(caravan_insurance$framers), sum(caravan_insurance$livingWell), sum(caravan_insurance$retired), sum(caravan_insurance$successful) )
+)
+
+ggplot(data=dat, aes(x=policy_status, y=Count, fill=policy_status)) +
+  geom_bar(colour="red", stat="identity")
+
 ```
 
 
-# Convert Ages into dummies
+# Age
 ```{r}
 caravan_insurance$MGEMLEEF = replace(caravan_insurance$MGEMLEEF, caravan_insurance$MGEMLEEF==1, 2)
 caravan_insurance$MGEMLEEF = replace(caravan_insurance$MGEMLEEF, caravan_insurance$MGEMLEEF==5, 4)
@@ -181,6 +213,7 @@ xlab="age",
 ylab="Count",
 border="black",
 col="blue"
+
 )
 
 barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$middleAge),
@@ -200,12 +233,6 @@ col="orange"
 )
 
 # Middle age people bought most policies
-
-```
-
-
-# Convert Religion into binary.
-```{r}
 
 ```
 
