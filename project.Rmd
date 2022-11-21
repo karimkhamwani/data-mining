@@ -9,38 +9,37 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
 ```{r}
-# library(ggplot2)
-# library(psych)
-# library(corrplot)
-# library(caret)
-# library(glmnet)
-# library(leaps)
-# library(reshape2)
-# library(gridExtra)
 # install.packages("Hmisc")
 # install.packages("pastecs")
 # install.packages("ggplot2")
 # install.packages("Hmisc")
-library("Hmisc")
-library(Hmisc)
-library(pastecs)
-library(ggplot2)
-library(plyr)
+# install.packages("fastDummies")
+# install.packages("lmtest")
 ```
+
+
+```{r}
+library(ggplot2)
+library(psych)
+library(corrplot)
+library(caret)
+library(glmnet)
+library(leaps)
+library(reshape2)
+library(gridExtra)
+library(fastDummies)
+library(lmtest)
+```
+
+
 
 
 ```{r}
 # reading file
 caravan_insurance = readr::read_csv("caravan-insurance-challenge.csv")
-
-# training data
-caravan_insurance_train = (caravan_insurance[caravan_insurance$ORIGIN == "train",])
-
-#testing data
-caravan_insurance_test = (caravan_insurance[caravan_insurance$ORIGIN == "test",])
 ```
+
 
 # Step 1 Data Visulation and exploration
 
@@ -138,7 +137,12 @@ hist(caravan_insurance$MGEMOMV, main="Average Household size",
 hist(caravan_insurance$MGEMLEEF, main="Average Age",
      xlab = "Average Age", col="green")
 
-boxplot(caravan_insurance$MGEMOMV, xlab = "Household", ylab = "Household Size", main ="Household")
+hist(caravan_insurance$MINKM30, main="low income",
+     xlab = "low income", col="green")
+
+# boxplot(caravan_insurance$MINKM30, xlab = "MINKM30", ylab = "MINKM30 Size", main ="MINKM30")
+
+# boxplot(caravan_insurance$MGEMOMV, xlab = "Household", ylab = "Household Size", main ="Household")
 
 ```
 
@@ -166,8 +170,7 @@ table(caravan_insurance$MAANTHUI)
 caravan_insurance$MAANTHUI = replace(caravan_insurance$MAANTHUI, caravan_insurance$MAANTHUI==3, 2)
 caravan_insurance$hasOneHouse = ifelse(caravan_insurance$MAANTHUI ==1, 1, 0)
 caravan_insurance$hasTwoHouses = ifelse(caravan_insurance$MAANTHUI ==2, 1, 0)
-caravan_insurance$has4Or5Houses = ifelse(caravan_insurance$MAANTHUI == 4 | caravan_insurance$MAANTHUI == 5, 1, 0)
-caravan_insurance$moreThan5Houses = ifelse(caravan_insurance$MAANTHUI > 5, 1, 0)
+caravan_insurance$moreThan4Houses = ifelse(caravan_insurance$MAANTHUI > 4, 1, 0)
 
 # by looking frequencies of houses we categorized houses into dummies.
 ```
@@ -197,43 +200,82 @@ ggplot(data=dat, aes(x=Categorized_Customers, y=Count, fill=Categorized_Customer
 ```
 
 
-# Age
+# Income
 ```{r}
-caravan_insurance$MGEMLEEF = replace(caravan_insurance$MGEMLEEF, caravan_insurance$MGEMLEEF==1, 2)
-caravan_insurance$MGEMLEEF = replace(caravan_insurance$MGEMLEEF, caravan_insurance$MGEMLEEF==5, 4)
-
-caravan_insurance$earlyAge = ifelse(caravan_insurance$MGEMLEEF == 2, 1, 0)
-caravan_insurance$middleAge = ifelse(caravan_insurance$MGEMLEEF == 3, 1, 0)
-caravan_insurance$oldAge = ifelse(caravan_insurance$MGEMLEEF == 4, 1, 0)
+car_policies <- sum(caravan_insurance$PPERSAUT != 0)
+car_policies
+```
 
 
-barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$earlyAge),
-main="Early age",
-xlab="age",
-ylab="Count",
-border="black",
-col="blue"
+```{r}
+# MOSTYPE : customer subtype
+# MFWEKIND: Household with children
+# MOPLLAAG: Lower level education
+# MHHUUR :  Rented house
+# MHKOOP :  Home owners
+# MINKM30:  Income < 30.000 low income
+# MINK7512: Income 75-122.000 high income
+# MKOOPKLA: Purchasing power class
+# PPERSAUT: Contribution car policies
+# CARAVAN:  Number of mobile home policies 0 - 1
 
-)
+names(caravan_insurance)[names(caravan_insurance) == "MFWEKIND"] = "house_hold_child"
+names(caravan_insurance)[names(caravan_insurance) == "MOPLLAAG"] = "lower_level_educ"
+names(caravan_insurance)[names(caravan_insurance) == "MHHUUR"] = "rented_house"
+names(caravan_insurance)[names(caravan_insurance) == "MHKOOP"] = "home_owners"
+names(caravan_insurance)[names(caravan_insurance) == "MINKM30"] = "income_less_than_30k"
+names(caravan_insurance)[names(caravan_insurance) == "MINK7512"] = "income_greater_than_75k_and_less_122k"
+names(caravan_insurance)[names(caravan_insurance) == "MKOOPKLA"] = "purchasing_power"
+names(caravan_insurance)[names(caravan_insurance) == "PPERSAUT"] = "contribution_car_policies"
 
-barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$middleAge),
-main="Middle age",
-xlab="age",
-ylab="Count",
-border="black",
-col="pink"
-)
+updated_data = data.frame(subset(caravan_insurance, select = c("ORIGIN", "drivenGrowers", "averageFamily", "conservativeFamilies", "hasOneHouse", "hasTwoHouses", "moreThan4Houses", "house_hold_child", "lower_level_educ", "rented_house", "home_owners", "income_less_than_30k", "income_greater_than_75k_and_less_122k", "purchasing_power", "contribution_car_policies", "CARAVAN")))
+updated_data
 
-barplot(table(caravan_insurance[caravan_insurance$CARAVAN == 1,]$oldAge),
-main="Old age",
-xlab="age",
-ylab="Count",
-border="black",
-col="orange"
-)
+```
 
-# Middle age people bought most policies
 
+# Partition data
+
+```{r}
+# training data
+caravan_insurance_train = (updated_data[updated_data$ORIGIN == "train",])
+
+#testing data
+caravan_insurance_test = (updated_data[updated_data$ORIGIN == "test",])
+```
+
+```{r}
+dim(caravan_insurance_train)
+dim(caravan_insurance_test)
+```
+
+```{r}
+caravan_insurance_train = (caravan_insurance_train[,-1])
+caravan_insurance_test = (caravan_insurance_test[,-1])
+```
+
+```{r}
+head(caravan_insurance_train)
+head(caravan_insurance_test)
+```
+
+```{r}
+xtabs(~contribution_car_policies + CARAVAN, data = caravan_insurance_train)
+```
+
+
+```{r}
+# Logistic train fit
+logisticTrainingFit <- glm(CARAVAN ~ drivenGrowers + hasOneHouse + income_less_than_30k, family=binomial(link='logit'), data = caravan_insurance_train)
+coeftest(logisticTrainingFit, type = "HC1")
+anova(logisticTrainingFit, test="Chisq")
+```
+
+```{r}
+LOutPredicted <- predict(logisticTrainingFit, type = "response")
+LOutPredictedClass <- ifelse(LOutPredicted>0.5, 1, 0)
+misClasificError <- mean(LOutPredictedClass != caravan_insurance_train$CARAVAN)
+print(paste('Accuracy',1-misClasificError))
 ```
 
 
