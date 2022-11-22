@@ -1,0 +1,87 @@
+*Who is more likely to buy insurance?*
+
+```{r}
+library(readxl)
+library(purrr)
+library(tidyverse)
+library(dplyr)
+library(plotly)
+library(skimr)
+library(caTools)
+library(caret)
+library(ROCR)
+library(MASS)
+```
+
+Load data
+
+```{r}
+df = read_excel('E:\\MSBA Mercer\\Data Mining\\Project\\Dummy data Caravan\\cardata.xlsx')
+head(df)
+```
+Data Type
+```{r}
+str(df)
+```
+Summary Data
+```{r}
+skim(df)
+```
+
+Missing Data
+```{r}
+sum(is.na(df))
+```
+Graphs
+```{r}
+boxplot(df$`High level education`)
+```
+
+```{r}
+boxplot(df$`Medium level education`)
+```
+```{r}
+boxplot(df$`Lower level education`)
+```
+```{r}
+boxplot(df$`Income < 30.000`)
+```
+
+```{r}
+boxplot(df$`Income 30-45.000`)
+```
+
+```{r}
+boxplot(df$`Income 45-75.000`)
+```
+
+```{r}
+boxplot(df$`Income 75-122.000`)
+```
+```{r}
+boxplot(df$`Income >123.000`)
+```
+Splitting Data
+```{r}
+split_df = sample.split(df$`Customer main type`, SplitRatio = .6)
+```
+
+Training Data
+```{r}
+train_df = subset(df, split = TRUE)
+```
+
+Test Data
+```{r}
+test_df = subset(df, split = FALSE)
+```
+
+Distribution of data
+```{r}
+prop.table(table(train_df$`Customer main type`))
+
+prop.table(table(test_df$`Customer main type`))
+```
+
+
+
