@@ -76,8 +76,21 @@ desc = skim(df)
 
 # Out liers
 ```{r}
-print("ooo")
+library(plotly)
 ```
+
+```{r}
+#Average Age
+plot_ly(y = df$MGEMLEEF,type = 'box', x = "Average Age")
+```
+
+```{r}
+# Average Income
+plot_ly(y = df$MINKGEM, type = "box")
+```
+
+
+
 
 
 # Plot graphs
@@ -212,6 +225,17 @@ nrow(df[df$noofhousehold == 3 & df$CARAVAN == 1,])
 ```
 
 
+#income and insurance
+```{r}
+#NEED TO CHANGE TITLES AND ALL
+ggplot(df,aes(factor(df$MINKGEM))) + 
+    geom_bar(aes(fill = factor(df$CARAVAN))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Number of house hold") +
+    scale_fill_discrete(name = "CARAVAN") + 
+    ggtitle("Number of house hold") +
+    theme(plot.title = element_text(hjust = 0.5))
+```
 
 
 # Correlation Analysis
@@ -226,7 +250,7 @@ corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", 
 # Which varaible to select when they are highly postive correlated?
 
 ```{r}
-plot(subtype, maintype, main="Scatterplot Between Sub type and main type", xlab="Customer Sub type ", ylab="Customer main type ", pch=19)
+# plot(subtype, maintype, main="Scatterplot Between Sub type and main type", xlab="Customer Sub type ", ylab="Customer main type ", pch=19)
 
 sd(df$subtype)
 sd(df$maintype)
@@ -236,9 +260,6 @@ sd(df$maintype)
 
 # Which varaible to select when they are midly negative correlated?
 
-```{r}
-
-```
 
 
 
