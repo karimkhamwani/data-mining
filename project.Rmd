@@ -269,8 +269,7 @@ table(df$MAANTHUI)
 
 df$MAANTHUI = replace(df$MAANTHUI, df$MAANTHUI==3, 2)
 df$hasOneHouse = ifelse(df$MAANTHUI ==1, 1, 0)
-df$hasTwoHouses = ifelse(df$MAANTHUI ==2, 1, 0)
-df$moreThan4Houses = ifelse(df$MAANTHUI > 4, 1, 0)
+df$hasMoreTwoHouses = ifelse(df$MAANTHUI > 2, 1, 0)
 
 # by looking frequencies of houses we categorized houses into dummies.
 ```
