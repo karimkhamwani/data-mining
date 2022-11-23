@@ -16,6 +16,10 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("Hmisc")
 # install.packages("fastDummies")
 # install.packages("lmtest")
+# install.packages("lmtest")
+# install.packages("caretEnsemble")
+# install.packages("Amelia")
+# install.packages("GGally")
 ```
 
 
@@ -32,6 +36,16 @@ library(fastDummies)
 library(lmtest)
 library(pastecs)
 library(skimr)
+library(tidyverse)
+library(caret)
+library(caretEnsemble)
+library(psych)
+library(Amelia)
+library(mice)
+library(GGally)
+library(rpart)
+library(randomForest)
+library(nnet)
 ```
 
 
@@ -139,7 +153,7 @@ ggplot(df,aes(factor(df$MOSTYPE))) +
     geom_bar(aes(fill = factor(df$CARAVAN))) + 
     labs(x="Customer Sub type") +
     scale_fill_discrete(name = "CARAVAN") + 
-    ggtitle("Caravan Policy based on Customer Main Type") +
+    ggtitle("Policy Bought based on Customer sub Type") +
     theme(plot.title = element_text(hjust = 0.5))
 
 df$subtype = df$MOSTYPE
@@ -181,7 +195,7 @@ ggplot(df,aes(factor(df$MAANTHUI))) +
     geom_text(stat='count', aes(label=..count..), vjust=0) + 
     labs(x="Number of houses") +
     scale_fill_discrete(name = "CARAVAN") + 
-    ggtitle("Policy bought on age group") +
+    ggtitle("Number of houses customer has who bought insurance") +
     theme(plot.title = element_text(hjust = 0.5))
 
 df$noofhouses = df$MAANTHUI
@@ -211,7 +225,12 @@ nrow(df[df$noofhousehold == 3 & df$CARAVAN == 1,])
 # Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
 ```
 
-
+# Charactertics we found so far
+# Customer having 3 house hold
+# Customer have one house
+# Age of customer is between 40 to 50
+# Customer are Driven Growers
+# Customer belongs to Lower class large families
 
 
 # Correlation Analysis
@@ -239,6 +258,7 @@ sd(df$maintype)
 ```{r}
 
 ```
+
 
 
 
@@ -317,12 +337,14 @@ updated_data
 # Partition data
 
 ```{r}
+df = readr::read_csv("caravan-insurance-challenge.csv")
 # training data
-df_train = (updated_data[updated_data$ORIGIN == "train",])
+df_train = (df[df$ORIGIN == "train",])
 
 #testing data
-df_test = (updated_data[updated_data$ORIGIN == "test",])
+df_test = (df[df$ORIGIN == "test",])
 ```
+
 
 ```{r}
 dim(df_train)
@@ -340,8 +362,30 @@ head(df_test)
 ```
 
 ```{r}
-xtabs(~contribution_car_policies + CARAVAN, data = df_train)
+max(df$MAANTHUI)
 ```
+
+
+```{r}
+set.seed(2)
+noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2,3,4,5,6,7,8,9,10))
+subTypeFactor = factor(df_train$MOSTYPE, levels = c(min(subtype) : max(subtype)))
+
+logit.reg = glm(CARAVAN ~ noOfHouseFactor + subTypeFactor , data = df_train, family = binomial (link = "logit"))
+predicted = predict(logit.reg, df_train, type = "response")
+
+# nrow(predicted)
+
+# data.frame(actual = df_test$CARAVAN[1:5], predicted = predicted[1:5])
+# min(predicted)
+# max(predicted)
+predictedClass = ifelse(predicted>=0.15, 1, 0)
+actualClass <- df_train$CARAVAN
+LConfusionOutPredicted <- table(actualClass, predictedClass)
+LConfusionOutPredicted
+summary(logit.reg)
+```
+
 
 
 ```{r}
