@@ -358,14 +358,14 @@ df$MINK123M_c = ifelse(df$MINK123M_c == 7, 0.82 * 123000, df$MINK123M_c)
 df$MINK123M_c = ifelse(df$MINK123M_c == 8, 0.94 * 123000, df$MINK123M_c)
 df$MINK123M_c = ifelse(df$MINK123M_c == 9, 1 * 123000, df$MINK123M_c)
 
-```
-
-
-```{r}
+# Average income
 df$MINKGEM_c = (df$MINK123M_c + df$MINK7512_c + df$MINK4575_c + df$MINK3045_c + df$MINKM30_c)/5
-#hist(df$MINKGEM_c)
+hist(df$MINKGEM_c)
 df$MINKGEM_c
+
 ```
+
+
 
 
 ```{r}
