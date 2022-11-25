@@ -363,7 +363,8 @@ df$MINK123M_c = ifelse(df$MINK123M_c == 9, 1 * 123000, df$MINK123M_c)
 
 ```{r}
 df$MINKGEM_c = (df$MINK123M_c + df$MINK7512_c + df$MINK4575_c + df$MINK3045_c + df$MINKM30_c)/5
-hist(df$MINKGEM_c)
+#hist(df$MINKGEM_c)
+df$MINKGEM_c
 ```
 
 
@@ -415,22 +416,35 @@ max(df$MAANTHUI)
 ```{r}
 set.seed(2)
 noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
-# subTypeFactor = factor(df_train$MOSTYPE, levels = c(min(df$subtype) : max(df$subtype)))
-# mainTypeFactor = factor(df_train$)
 
-logit.reg = glm(CARAVAN ~ noOfHouseFactor + drivenGrowers + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
+logit.reg = glm(CARAVAN ~ drivenGrowers + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
 predicted = predict(logit.reg, df_train, type = "response")
 
-# nrow(predicted)
 
-# data.frame(actual = df_test$CARAVAN[1:5], predicted = predicted[1:5])
-# min(predicted)
-# max(predicted)
-predictedClass = ifelse(predicted>=0.15, 1, 0)
+
+predictedClass = ifelse(predicted>=0.1, 1, 0)
 actualClass <- df_train$CARAVAN
 LConfusionOutPredicted <- table(actualClass, predictedClass)
 LConfusionOutPredicted
-summary(logit.reg)
+
+totalFalse = LConfusionOutPredicted[1] + LConfusionOutPredicted[3]
+specificity = (LConfusionOutPredicted[1] / totalFalse) * 100
+
+totalTrue = LConfusionOutPredicted[2] + LConfusionOutPredicted[4]
+sensitivity = (LConfusionOutPredicted[4] / totalTrue) * 100
+
+totalRecords = totalTrue + totalFalse
+error = (LConfusionOutPredicted[4] + LConfusionOutPredicted[1])/totalRecords
+
+accurracy = (1 - error) * 100
+
+paste0("sensitivity: ", sensitivity)
+paste0("specificity: ", specificity)
+paste0("error: ", error)
+paste0("accurracy: ", accurracy)
+
+
+# we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
 ```
 
 
