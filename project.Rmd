@@ -222,7 +222,7 @@ df$noofhousehold = df$MGEMOMV
 nrow(df[df$noofhousehold == 1 & df$CARAVAN == 1,])
 nrow(df[df$noofhousehold == 2 & df$CARAVAN == 1,])
 nrow(df[df$noofhousehold == 3 & df$CARAVAN == 1,])
-
+df$hasThreeHouseHold = ifelse(df$noofhousehold == 3, 1, 0)
 # Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
 ```
 
@@ -387,6 +387,8 @@ df$MINKGEM_c
 ```{r}
 # training data
 df_train = (df[df$ORIGIN == "train",])
+
+
 str(df_train)
 #testing data
 df_test = (df[df$ORIGIN == "test",])
@@ -416,16 +418,16 @@ max(df$MAANTHUI)
 ```{r}
 set.seed(2)
 noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
+noofhouseholdFactor = factor(df_train$MGEMOMV, levels = c(1,2,3,4,5,6))
+ageFactor = factor(df_train$MGEMLEEF, levels = c(1,2,3,4,5,6))
 
-logit.reg = glm(CARAVAN ~ drivenGrowers + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
+logit.reg = glm(CARAVAN ~  ageFactor + noofhouseholdFactor + drivenGrowers + averageFamily + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
 predicted = predict(logit.reg, df_train, type = "response")
-
-
 
 predictedClass = ifelse(predicted>=0.1, 1, 0)
 actualClass <- df_train$CARAVAN
-LConfusionOutPredicted <- table(actualClass, predictedClass)
-LConfusionOutPredicted
+LConfusionOutPredicted = table(actualClass, predictedClass)
+
 
 totalFalse = LConfusionOutPredicted[1] + LConfusionOutPredicted[3]
 specificity = (LConfusionOutPredicted[1] / totalFalse) * 100
@@ -443,6 +445,7 @@ paste0("specificity: ", specificity)
 paste0("error: ", error)
 paste0("accurracy: ", accurracy)
 
+summary(logit.reg)
 
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
 ```
