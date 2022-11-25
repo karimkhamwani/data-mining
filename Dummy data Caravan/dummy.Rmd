@@ -1,4 +1,4 @@
-*Who is more likely to buy insurance?*
+*Who is more likely to buy home insurance?*
 
 ```{r}
 library(readxl)
@@ -11,6 +11,7 @@ library(caTools)
 library(caret)
 library(ROCR)
 library(MASS)
+library(ggplot2)
 ```
 
 Load data
@@ -32,56 +33,220 @@ Missing Data
 ```{r}
 sum(is.na(df))
 ```
-Graphs
+
+Duplicated Data
 ```{r}
-boxplot(df$`High level education`)
+#Not valid because the dataset is categorical 
+sum(duplicated(df))
+```
+
+Outliers
+```{r}
+
+```
+
+Partition Data
+```{r}
+sample = sample.split(df$`Customer Subtype; see L0`, SplitRatio = .6)
 ```
 
 ```{r}
-boxplot(df$`Medium level education`)
-```
-```{r}
-boxplot(df$`Lower level education`)
-```
-```{r}
-boxplot(df$`Income < 30.000`)
+test = subset(df, sample == FALSE)
 ```
 
 ```{r}
-boxplot(df$`Income 30-45.000`)
+train = subset(df, sample == TRUE)
 ```
 
 ```{r}
-boxplot(df$`Income 45-75.000`)
+dim(train)
+dim(test)
+```
+Customer Subtypes with Mobile Insurance [Train and Test]
+```{r}
+ggplot(train,aes(factor(train$`Customer Subtype; see L0`))) + 
+    geom_bar(aes(fill = factor(train$`Number of mobile home policies 0 - 1`))) + 
+    labs(x="Customer Sub Type") +
+    scale_fill_discrete(name = "Mobile Insurance") + 
+    ggtitle("Caravan Policy based on Customer Main Type") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+
+nrow(train[train$`Customer Subtype; see L0` == 1 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 2 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 3 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 4 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 5 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 6 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 7 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 8 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 9 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer Subtype; see L0` == 10 & train$`Number of mobile home policies 0 - 1` == 1,])
+```
+```{r}
+ggplot(test,aes(factor(test$`Customer Subtype; see L0`))) + 
+    geom_bar(aes(fill = factor(test$`Number of mobile home policies 0 - 1`))) + 
+    labs(x="Customer Sub Type") +
+    scale_fill_discrete(name = "Mobile Insurance") + 
+    ggtitle("Caravan Policy based on Customer Main Type") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+nrow(test[test$`Customer Subtype; see L0` == 1 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 2 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 3 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 4 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 5 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 6 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 7 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 8 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 9 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer Subtype; see L0` == 10 & test$`Number of mobile home policies 0 - 1` == 1,])
+
+```
+
+Customer Main Types with Mobile Insurance [Test and Train]
+```{r}
+ggplot(test,aes(factor(test$`Customer main type; see L2`))) + 
+    geom_bar(aes(fill = factor(test$`Number of mobile home policies 0 - 1`))) + 
+    labs(x="Customer Main Type") +
+    scale_fill_discrete(name = "Mobile Insurance") + 
+    ggtitle("Caravan Policy based on Customer Main Type") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+
+nrow(test[test$`Customer main type; see L2` == 1 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 2 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 3 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 4 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 5 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 6 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 7 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 8 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 9 & test$`Number of mobile home policies 0 - 1` == 1,])
+nrow(test[test$`Customer main type; see L2` == 10 & test$`Number of mobile home policies 0 - 1` == 1,])
+
+```
+```{r}
+ggplot(train,aes(factor(train$`Customer main type; see L2`))) + 
+    geom_bar(aes(fill = factor(train$`Number of mobile home policies 0 - 1`))) + 
+    labs(x="Customer Sub Type") +
+    scale_fill_discrete(name = "Mobile Insurance") + 
+    ggtitle("Caravan Policy based on Customer Main Type") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+nrow(train[train$`Customer main type; see L2` == 1 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 2 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 3 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 4 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 5 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 6 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 7 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 8 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 9 & train$`Number of mobile home policies 0 - 1` == 1,])
+nrow(train[train$`Customer main type; see L2` == 10 & train$`Number of mobile home policies 0 - 1` == 1,])
+
+```
+
+Age with Mobile Insurance [Train and Test]
+```{r}
+ggplot(train,aes(factor(train$`Avg age; see L1`))) + 
+    geom_bar(aes(fill = factor(train$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
+
 ```
 
 ```{r}
-boxplot(df$`Income 75-122.000`)
+ggplot(test,aes(factor(test$`Avg age; see L1`))) + 
+    geom_bar(aes(fill = factor(test$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
+
+```
+
+Dummy for number of houses
+```{r}
+houses_train = ifelse(train$`Number of houses 1 - 10`>1, 1,0)
+hist(houses)
 ```
 ```{r}
-boxplot(df$`Income >123.000`)
+houses_test = ifelse(test$`Number of houses 1 - 10`>1, 1,0)
+hist(houses)
 ```
-Splitting Data
+Number of Houses 
 ```{r}
-split_df = sample.split(df$`Customer main type`, SplitRatio = .6)
+ggplot(test,aes(factor(houses_test))) + 
+    geom_bar(aes(fill = factor(test$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
 ```
-
-Training Data
 ```{r}
-train_df = subset(df, split = TRUE)
+ggplot(train,aes(factor(houses_train))) + 
+    geom_bar(aes(fill = factor(train$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
 ```
-
-Test Data
+Dummy for number of households
 ```{r}
-test_df = subset(df, split = FALSE)
+household_train = ifelse(train$`Avg size household 1 - 6`> 1, 1,0)
+household_test = ifelse(test$`Avg size household 1 - 6`> 1, 1,0)
 ```
 
-Distribution of data
 ```{r}
-prop.table(table(train_df$`Customer main type`))
+ggplot(train,aes(factor(household_train))) + 
+    geom_bar(aes(fill = factor(train$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+ggplot(test,aes(factor(household_test))) + 
+    geom_bar(aes(fill = factor(test$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
+```
+Income to Numeric
+```{r}
 
-prop.table(table(test_df$`Customer main type`))
 ```
 
 
+
+Income and Insurance
+```{r}
+ggplot(test,aes(factor(test$`Average income`))) + 
+    geom_bar(aes(fill = factor(test$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+ggplot(train,aes(factor(train$`Average income`))) + 
+    geom_bar(aes(fill = factor(train$`Number of mobile home policies 0 - 1`))) + 
+    geom_text(stat='count', aes(label=..count..), vjust=0) + 
+    labs(x="Age Group") +
+    scale_fill_discrete(name = "Mobile Polcy") + 
+    ggtitle("Policy bought on age group") +
+    theme(plot.title = element_text(hjust = 0.5))
+```
 
