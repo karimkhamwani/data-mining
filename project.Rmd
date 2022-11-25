@@ -88,11 +88,31 @@ desc = skim(df)
 ```
 
 
-# Out liers
+# Outliers detection
 ```{r}
-
+library(plotly)
 ```
 
+```{r}
+plot_ly(y = df$MINKM30_c, type = "box", x = "Income Below 30K")
+```
+
+```{r}
+plot_ly(y = df$MINK3045_c, type = "box", x = "Income Between 31k - 45K")
+```
+
+```{r}
+plot_ly(y = df$MINK4575_c, type = "box",  x = "Income Between 45k - 75k")
+```
+```{r}
+plot_ly(y = df$MINK7512_c, x = "Income Between 75k - 123k", type = "box")
+```
+```{r}
+plot_ly(y = df$MINK123M_c, x = "Income above 123K", type = "box")
+```
+```{r}
+plot_ly( x = df$MINKGEM_c, type = "histogram")
+```
 
 # Plot graphs
 ```{r}
