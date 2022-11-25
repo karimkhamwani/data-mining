@@ -157,6 +157,7 @@ ggplot(df,aes(factor(df$MOSTYPE))) +
     theme(plot.title = element_text(hjust = 0.5))
 
 df$subtype = df$MOSTYPE
+df$subtype
 nrow(df[df$subtype == 33 & df$CARAVAN == 1,])
 nrow(df[df$subtype == 8 & df$CARAVAN == 1,])
 
@@ -245,7 +246,7 @@ corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", 
 # Which varaible to select when they are highly postive correlated?
 
 ```{r}
-plot(subtype, maintype, main="Scatterplot Between Sub type and main type", xlab="Customer Sub type ", ylab="Customer main type ", pch=19)
+plot(df$subtype, df$maintype, main="Scatterplot Between Sub type and main type", xlab="Customer Sub type ", ylab="Customer main type ", pch=19)
 
 sd(df$subtype)
 sd(df$maintype)
@@ -261,15 +262,14 @@ sd(df$maintype)
 
 
 
-
 # Dummies conversion
 # Number of Houses
 ```{r}
 table(df$MAANTHUI)
 
-df$MAANTHUI = replace(df$MAANTHUI, df$MAANTHUI==3, 2)
-df$hasOneHouse = ifelse(df$MAANTHUI ==1, 1, 0)
-df$hasMoreTwoHouses = ifelse(df$MAANTHUI > 2, 1, 0)
+df$MAANTHUI = replace(df$MAANTHUI, df$MAANTHUI > 2, 2)
+df$OneHouse = ifelse(df$MAANTHUI ==1, 1, 0)
+df$moreThanTwoHouse = ifelse(df$MAANTHUI > 2, 1, 0)
 
 # by looking frequencies of houses we categorized houses into dummies.
 ```
@@ -286,6 +286,7 @@ df$framers = ifelse(df$MOSTYPE %in% c(40,41), 1, 0)
 df$livingWell = ifelse(df$MOSTYPE %in% c(20,21,22,23,24), 1, 0)
 df$retired = ifelse(df$MOSTYPE %in% c(29,30,31,32), 1, 0)
 df$successful = ifelse(df$MOSTYPE %in% c(1,2,3,4,5), 1, 0)
+
 
 
 dat <- data.frame(
@@ -317,29 +318,15 @@ car_policies
 # MKOOPKLA: Purchasing power class
 # PPERSAUT: Contribution car policies
 # CARAVAN:  Number of mobile home policies 0 - 1
-
-names(df)[names(df) == "MFWEKIND"] = "house_hold_child"
-names(df)[names(df) == "MOPLLAAG"] = "lower_level_educ"
-names(df)[names(df) == "MHHUUR"] = "rented_house"
-names(df)[names(df) == "MHKOOP"] = "home_owners"
-names(df)[names(df) == "MINKM30"] = "income_less_than_30k"
-names(df)[names(df) == "MINK7512"] = "income_greater_than_75k_and_less_122k"
-names(df)[names(df) == "MKOOPKLA"] = "purchasing_power"
-names(df)[names(df) == "PPERSAUT"] = "contribution_car_policies"
-
-updated_data = data.frame(subset(df, select = c("ORIGIN", "drivenGrowers", "averageFamily", "conservativeFamilies", "hasOneHouse", "hasTwoHouses", "moreThan4Houses", "house_hold_child", "lower_level_educ", "rented_house", "home_owners", "income_less_than_30k", "income_greater_than_75k_and_less_122k", "purchasing_power", "contribution_car_policies", "CARAVAN")))
-updated_data
-
 ```
 
 
 # Partition data
 
 ```{r}
-df = readr::read_csv("caravan-insurance-challenge.csv")
 # training data
 df_train = (df[df$ORIGIN == "train",])
-
+str(df_train)
 #testing data
 df_test = (df[df$ORIGIN == "test",])
 ```
@@ -367,10 +354,11 @@ max(df$MAANTHUI)
 
 ```{r}
 set.seed(2)
-noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2,3,4,5,6,7,8,9,10))
-subTypeFactor = factor(df_train$MOSTYPE, levels = c(min(subtype) : max(subtype)))
+noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
+# subTypeFactor = factor(df_train$MOSTYPE, levels = c(min(df$subtype) : max(df$subtype)))
+# mainTypeFactor = factor(df_train$)
 
-logit.reg = glm(CARAVAN ~ noOfHouseFactor + subTypeFactor , data = df_train, family = binomial (link = "logit"))
+logit.reg = glm(CARAVAN ~ noOfHouseFactor + drivenGrowers, data = df_train, family = binomial (link = "logit"))
 predicted = predict(logit.reg, df_train, type = "response")
 
 # nrow(predicted)
