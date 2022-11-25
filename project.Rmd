@@ -300,10 +300,70 @@ ggplot(data=dat, aes(x=Categorized_Customers, y=Count, fill=Categorized_Customer
 ```
 
 
-# Income
+# Income Conversion
 ```{r}
-car_policies <- sum(df$PPERSAUT != 0)
-car_policies
+# Converting 30k income into value
+df$MINKM30_c = ifelse(df$MINKM30 == 1, 0.05 * 30000, df$MINKM30)
+df$MINKM30_c = ifelse(df$MINKM30_c == 2, 0.17 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 3, 0.3 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 4, 0.43 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 5, 0.56 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 6, 0.69 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 7, 0.82 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 8, 0.94 * 30000, df$MINKM30_c)
+df$MINKM30_c = ifelse(df$MINKM30_c == 9, 1 * 30000, df$MINKM30_c)
+
+
+# Converting 45k income into value
+df$MINK3045_c = ifelse(df$MINK3045 == 1, 0.05 * 45000, df$MINK3045)
+df$MINK3045_c = ifelse(df$MINK3045_c == 2, 0.17 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 3, 0.3 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 4, 0.43 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 5, 0.56 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 6, 0.69 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 7, 0.82 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 8, 0.94 * 45000, df$MINK3045_c)
+df$MINK3045_c = ifelse(df$MINK3045_c == 9, 1 * 45000, df$MINK3045_c)
+
+# Converting 70k income into value
+df$MINK4575_c = ifelse(df$MINK4575 == 1, 0.05 * 75000, df$MINK4575)
+df$MINK4575_c = ifelse(df$MINK4575_c == 2, 0.17 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 3, 0.3 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 4, 0.43 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 5, 0.56 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 6, 0.69 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 7, 0.82 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 8, 0.94 * 75000, df$MINK4575_c)
+df$MINK4575_c = ifelse(df$MINK4575_c == 9, 1 * 75000, df$MINK4575_c)
+
+# Converting 122k income into value
+df$MINK7512_c = ifelse(df$MINK7512 == 1, 0.05 * 122000, df$MINK7512)
+df$MINK7512_c = ifelse(df$MINK7512_c == 2, 0.17 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 3, 0.3 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 4, 0.43 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 5, 0.56 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 6, 0.69 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 7, 0.82 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 8, 0.94 * 122000, df$MINK7512_c)
+df$MINK7512_c = ifelse(df$MINK7512_c == 9, 1 * 122000, df$MINK7512_c)
+
+# Converting 123k income into value
+df$MINK123M_c = ifelse(df$MINK123M == 1, 0.05 * 123000, df$MINK123M)
+df$MINK123M_c = ifelse(df$MINK123M_c == 2, 0.17 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 3, 0.3 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 4, 0.43 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 5, 0.56 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 6, 0.69 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 7, 0.82 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 8, 0.94 * 123000, df$MINK123M_c)
+df$MINK123M_c = ifelse(df$MINK123M_c == 9, 1 * 123000, df$MINK123M_c)
+
+```
+
+
+```{r}
+df$MINKGEM_c = (df$MINK123M_c + df$MINK7512_c + df$MINK4575_c + df$MINK3045_c + df$MINKM30_c)/5
+hist(df$MINKGEM_c)
 ```
 
 
@@ -358,7 +418,7 @@ noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
 # subTypeFactor = factor(df_train$MOSTYPE, levels = c(min(df$subtype) : max(df$subtype)))
 # mainTypeFactor = factor(df_train$)
 
-logit.reg = glm(CARAVAN ~ noOfHouseFactor + drivenGrowers, data = df_train, family = binomial (link = "logit"))
+logit.reg = glm(CARAVAN ~ noOfHouseFactor + drivenGrowers + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
 predicted = predict(logit.reg, df_train, type = "response")
 
 # nrow(predicted)
