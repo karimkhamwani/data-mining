@@ -473,13 +473,6 @@ length(highCor)
 ```
 
 
-```{r}
-cor(train_3$PPERSAUT, train_3$APERSAUT)
-cor(train_3$PPERSAUT, train_3$CARAVAN)
-cor(train_3$APERSAUT, train_3$CARAVAN)
-# high corelation between  Contribution boat policies and Number of car policies, APERSAUT has low corelation with response variable hence as compare to PPERSAUT so we exclude APERSAUT from regression
-```
-
 
 ```{r}
 library('rlist')
@@ -503,24 +496,30 @@ length(excludedVariables)
 
 
 ```{r}
-
 train_3 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
-dim(train_3)
-head(train_3)
 # 33 + 4 + 1 (carvan) = 38
 # around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated and are signicant.
 ```
 
+
 ```{r}
-cor_response = data.frame("ind_var" = colnames(train_3), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
+# cor(train_3$PPERSAUT, train_3$APERSAUT)
+# cor(train_3$PPERSAUT, train_3$CARAVAN)
+# cor(train_3$APERSAUT, train_3$CARAVAN)
+# high corelation between  Contribution boat policies and Number of car policies, APERSAUT has low corelation with response variable hence as compare to PPERSAUT so we exclude APERSAUT from regression
+```
 
-for (i in colnames(train_3)){
-    cor_test = cor.test(train_3[, i], train_data_3[, "CARAVAN"])
-    cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
-    cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
-}
 
-cor_response[order(cor_response$cor_coeff, decreasing = T),]
+```{r}
+# cor_response = data.frame("ind_var" = colnames(train_3), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
+# 
+# for (i in colnames(train_3)){
+#     cor_test = cor.test(train_3[, i], train_3[, "CARAVAN"])
+#     cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
+#     cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
+# }
+# 
+# cor_response[order(cor_response$cor_coeff, decreasing = T),]
 ```
 
 
@@ -532,7 +531,6 @@ colnames(train_3)
 ```{r}
 set.seed(1234)
 shuffle = sample(1:nrow(df_train), nrow(df_train))
-shuffle
 ```
 
 ```{r}
@@ -549,8 +547,8 @@ glm2.summary
 
 # Summary
 # 3 coefficient as positive behavior and 3 has negative behavior against response variable
-# lower education is highly signicant it means education is highly weighted against response variable
-# PPERSAUT is highly siginicat the more customer has contirubtion towards car policy the more he is likely to buy insurance.
+# lower education is highly significant it means education is highly weighted against response variable
+# PPERSAUT is highly significant the more customer has contribution towards car policy the more he is likely to buy insurance.
 # MINKM30 is not significant it means if customer is earning less than 30k then he might not buy insurance because he can't afford it?
 # Median of deviance is -0.2810 which negative and close to zero telling us predictor we choose badly fit the model we need to try with other combination. 
 ```
@@ -559,8 +557,8 @@ glm2.summary
 # Model 3
 ```{r}
 # its worth to compare model with all predictors vs model 2.
-glm.3 = glm(CARAVAN ~ ., data = df_train, family = binomial(link = "logit"))
-glm3.summary <- summary(glm.3)
-glm3.summary
+# glm.3 = glm(CARAVAN ~ ., data = df_train, family = binomial(link = "logit"))
+# glm3.summary <- summary(glm.3)
+# glm3.summary
 ```
 
