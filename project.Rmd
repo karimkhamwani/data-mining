@@ -271,6 +271,7 @@ df$MAANTHUI = replace(df$MAANTHUI, df$MAANTHUI > 2, 2)
 df$OneHouse = ifelse(df$MAANTHUI ==1, 1, 0)
 df$moreThanTwoHouse = ifelse(df$MAANTHUI > 2, 1, 0)
 
+
 # by looking frequencies of houses we categorized houses into dummies.
 ```
 
@@ -554,4 +555,12 @@ glm2.summary
 # Median of deviance is -0.2810 which negative and close to zero telling us predictor we choose badly fit the model we need to try with other combination. 
 ```
 
+
+# Model 3
+```{r}
+# its worth to compare model with all predictors vs model 2.
+glm.3 = glm(CARAVAN ~ ., data = df_train, family = binomial(link = "logit"))
+glm3.summary <- summary(glm.3)
+glm3.summary
+```
 
