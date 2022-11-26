@@ -46,6 +46,7 @@ library(GGally)
 library(rpart)
 library(randomForest)
 library(nnet)
+library(plotly)
 ```
 
 
@@ -90,7 +91,7 @@ desc = skim(df)
 
 # Outliers detection
 ```{r}
-library(plotly)
+
 ```
 
 ```{r}
