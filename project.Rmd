@@ -466,20 +466,34 @@ summary(correlationMatrix[upper.tri(correlationMatrix)])
 
 ```{r}
 highCor <- findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
+highCor
 length(highCor)
 # there are 34 varaibles which are highcorelated with each other, before droping them we need to see how they are corelated with response variable carvan.
 ```
 
+
+```{r}
+cor(train_3$PPERSAUT, train_3$APERSAUT)
+cor(train_3$PPERSAUT, train_3$CARAVAN)
+cor(train_3$APERSAUT, train_3$CARAVAN)
+# high corelation between  Contribution boat policies and Number of car policies, APERSAUT has low corelation with response variable hence as compare to PPERSAUT so we exclude APERSAUT from regression
+```
+
+
 ```{r}
 library('rlist')
 target_cor_df <- data.frame(V86 = cor(train_2[,sort(highCor)], df_train[, "CARAVAN"]))
+head(train_2)
 
 
 cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
 cor_df
 excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
 
-excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c')
+
+excludedDummiesAndVariables = list.append(excludedVariables, 'APERSAUT', 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c')
+
+excludedVariables
 
 length(excludedVariables)
 
@@ -506,11 +520,38 @@ for (i in colnames(train_3)){
 }
 
 cor_response[order(cor_response$cor_coeff, decreasing = T),]
-
 ```
 
 
 ```{r}
-corrplot(cor(subset(train_3 , select = c(-CARAVAN))), method = "square", type = "upper")
+colnames(train_3)
 ```
+
+# Model fiting Model 2
+```{r}
+set.seed(1234)
+shuffle = sample(1:nrow(df_train), nrow(df_train))
+shuffle
+```
+
+```{r}
+# MFWEKIND  Household with children
+# MOPLLAAG  Lower level education
+# MHHUUR Rented house
+# MINKM30 :  Income < 30.000
+# MKOOPKLA:  Purchasing power class 
+# PPERSAUT : Contribution car policies
+glm_2 = data.frame(subset(df_train, select = c("MFWEKIND", "MOPLLAAG", "MHHUUR", "MINKM30", "MKOOPKLA", "PPERSAUT", "CARAVAN")))
+glm.2 = glm(CARAVAN ~ ., data = glm_2, family = binomial(link = "logit"))
+glm2.summary <- summary(glm.2)
+glm2.summary
+
+# Summary
+# 3 coefficient as positive behavior and 3 has negative behavior against response variable
+# lower education is highly signicant it means education is highly weighted against response variable
+# PPERSAUT is highly siginicat the more customer has contirubtion towards car policy the more he is likely to buy insurance.
+# MINKM30 is not significant it means if customer is earning less than 30k then he might not buy insurance because he can't afford it?
+# Median of deviance is -0.2810 which negative and close to zero telling us predictor we choose badly fit the model we need to try with other combination. 
+```
+
 
