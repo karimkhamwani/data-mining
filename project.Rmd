@@ -437,9 +437,7 @@ sensitivity = (LConfusionOutPredicted[4] / totalTrue) * 100
 
 totalRecords = totalTrue + totalFalse
 error = (LConfusionOutPredicted[4] + LConfusionOutPredicted[1])/totalRecords
-
 accurracy = (1 - error) * 100
-
 paste0("sensitivity: ", sensitivity)
 paste0("specificity: ", specificity)
 paste0("error: ", error)
@@ -451,19 +449,68 @@ summary(logit.reg)
 ```
 
 
-
+# Building model Correlation 
+# Pre processing
 ```{r}
-# Logistic train fit
-logisticTrainingFit <- glm(CARAVAN ~ drivenGrowers + hasOneHouse + income_less_than_30k, family=binomial(link='logit'), data = df_train)
-coeftest(logisticTrainingFit, type = "HC1")
-anova(logisticTrainingFit, test="Chisq")
+
+train_2  = data.frame(df_train[, -c(2,3,4,5)])
+zv = apply(train_2, 2, function(x) length(unique(x)) == 1)
+dfr = train_2[, !zv]
+n=length(colnames(dfr))
+correlationMatrix = cor(dfr[,1:n],use="complete.obs")
+
+summary(correlationMatrix[upper.tri(correlationMatrix)])
+
+# After removing our suspected predictors we still have strong positive correlation with 99.6% and strong negative corelation with 99.9%, we need to find which of them are highly corelated
 ```
 
 ```{r}
-LOutPredicted <- predict(logisticTrainingFit, type = "response")
-LOutPredictedClass <- ifelse(LOutPredicted>0.5, 1, 0)
-misClasificError <- mean(LOutPredictedClass != df_train$CARAVAN)
-print(paste('Accuracy',1-misClasificError))
+highCor <- findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
+length(highCor)
+# there are 34 varaibles which are highcorelated with each other, before droping them we need to see how they are corelated with response variable carvan.
 ```
 
+```{r}
+library('rlist')
+target_cor_df <- data.frame(V86 = cor(train_2[,sort(highCor)], df_train[, "CARAVAN"]))
+
+
+cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
+cor_df
+excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
+
+excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c')
+
+length(excludedVariables)
+
+# There are 33 varibles which are less correlated with response variable to there is n sense to take them into regression so we will drop variables where corelation coefficent is less than 0.9
+```
+
+
+```{r}
+
+train_3 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
+dim(train_3)
+head(train_3)
+# 33 + 4 + 1 (carvan) = 38
+# around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated and are signicant.
+```
+
+```{r}
+cor_response = data.frame("ind_var" = colnames(train_3), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
+
+for (i in colnames(train_3)){
+    cor_test = cor.test(train_3[, i], train_data_3[, "CARAVAN"])
+    cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
+    cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
+}
+
+cor_response[order(cor_response$cor_coeff, decreasing = T),]
+
+```
+
+
+```{r}
+corrplot(cor(subset(train_3 , select = c(-CARAVAN))), method = "square", type = "upper")
+```
 
