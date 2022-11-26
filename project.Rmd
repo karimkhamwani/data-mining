@@ -20,7 +20,7 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("caretEnsemble")
 # install.packages("Amelia")
 # install.packages("GGally")
-install.packages("plotly")
+# install.packages("plotly")
 ```
 
 
