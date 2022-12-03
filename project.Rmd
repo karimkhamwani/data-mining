@@ -389,8 +389,6 @@ df$MINKGEM_c
 # training data
 df_train = (df[df$ORIGIN == "train",])
 
-
-str(df_train)
 #testing data
 df_test = (df[df$ORIGIN == "test",])
 ```
@@ -406,10 +404,6 @@ df_train = (df_train[,-1])
 df_test = (df_test[,-1])
 ```
 
-```{r}
-head(df_train)
-head(df_test)
-```
 
 ```{r}
 max(df$MAANTHUI)
@@ -422,7 +416,7 @@ noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
 noofhouseholdFactor = factor(df_train$MGEMOMV, levels = c(1,2,3,4,5,6))
 ageFactor = factor(df_train$MGEMLEEF, levels = c(1,2,3,4,5,6))
 
-logit.reg = glm(CARAVAN ~  ageFactor + noofhouseholdFactor + drivenGrowers + averageFamily + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
+logit.reg = glm(CARAVAN ~  drivenGrowers + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
 predicted = predict(logit.reg, df_train, type = "response")
 
 predictedClass = ifelse(predicted>=0.1, 1, 0)
@@ -449,7 +443,6 @@ summary(logit.reg)
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
 ```
 
-
 # Building model Correlation 
 # Pre processing
 ```{r}
@@ -462,69 +455,88 @@ correlationMatrix = cor(dfr[,1:n],use="complete.obs")
 
 summary(correlationMatrix[upper.tri(correlationMatrix)])
 
-# After removing our suspected predictors we still have strong positive correlation with 99.6% and strong negative corelation with 99.9%, we need to find which of them are highly corelated
+# After removing our suspected predictors we still have strong positive correlation with 1% and strong negative corelation with 99.9%, we need to find which of them are highly corelated
 ```
 
 ```{r}
-highCor <- findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
-highCor
-length(highCor)
-# there are 34 varaibles which are highcorelated with each other, before droping them we need to see how they are corelated with response variable carvan.
+high = findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
+high
+# there are 34 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
 ```
 
 
 
 ```{r}
 library('rlist')
-target_cor_df <- data.frame(V86 = cor(train_2[,sort(highCor)], df_train[, "CARAVAN"]))
-head(train_2)
+target_cor_df <- data.frame(V86 = cor(train_2[,sort(high)], df_train[, "CARAVAN"]))
 
 
 cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
-cor_df
+## draw correlation matrix.
+#  row.names(cor_df)
+
 excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
 
 
-excludedDummiesAndVariables = list.append(excludedVariables, 'APERSAUT', 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c')
+excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c')
 
-excludedVariables
+excludedDummiesAndVariables
 
-length(excludedVariables)
 
-# There are 33 varibles which are less correlated with response variable to there is n sense to take them into regression so we will drop variables where corelation coefficent is less than 0.9
+# There are 33 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them.
 ```
 
 
 ```{r}
 train_3 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
+names(train_3)
+# cor(train_3)
+# corrplot(cor(train_3), method = "number")
 # 33 + 4 + 1 (carvan) = 38
 # around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated and are signicant.
 ```
 
 
 ```{r}
-# cor(train_3$PPERSAUT, train_3$APERSAUT)
-# cor(train_3$PPERSAUT, train_3$CARAVAN)
-# cor(train_3$APERSAUT, train_3$CARAVAN)
-# high corelation between  Contribution boat policies and Number of car policies, APERSAUT has low corelation with response variable hence as compare to PPERSAUT so we exclude APERSAUT from regression
+# corelation between no of car policy and carvan
+cor(train_3$APERSAUT, train_3$CARAVAN)
+# # corelation between contribution car policies and carvan
+cor(train_3$PPERSAUT, train_3$CARAVAN)
+# # corelation between  Purchasing power class and carvan
+cor(train_3$MKOOPKLA, train_3$CARAVAN)
 ```
 
 
 ```{r}
-# cor_response = data.frame("ind_var" = colnames(train_3), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
-# 
-# for (i in colnames(train_3)){
-#     cor_test = cor.test(train_3[, i], train_3[, "CARAVAN"])
-#     cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
-#     cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
-# }
-# 
-# cor_response[order(cor_response$cor_coeff, decreasing = T),]
+cor_response = data.frame("ind_var" = colnames(train_3), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
+
+for (i in colnames(train_3)){
+    cor_test = cor.test(train_3[, i], train_3[, "CARAVAN"])
+    cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
+    cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
+}
+
+cor_response[order(cor_response$cor_coeff, decreasing = T),]
 ```
 
 
 ```{r}
-colnames(train_3)
+corrplot(cor(subset(train_3 , select = c(-CARAVAN))), method = "square", type = "upper")
+```
+
+
+```{r}
+#  Contribution car policies &  Number of car policies 
+cor(train_3$PPERSAUT, train_3$APERSAUT)
+# There is a high correlation between car policies and number of car policies we will exclude a variable which has less correlation with response variable.
+cor(train_3[ , c("PPERSAUT", "APERSAUT")], train_3[ , "CARAVAN"])
+# Contribution car policies is more correlated with response variable so we exclude Number of car policies
+train_4 = data.frame(train_3[ , !colnames(train_data_3) %in% c("APERSAUT")])
+```
+
+
+```{r}
+colnames(train_4)
 ```
 
 # Model fiting Model 2
