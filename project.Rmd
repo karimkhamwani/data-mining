@@ -564,7 +564,7 @@ cor(train_3$PPERSAUT, train_3$APERSAUT)
 # it's not always necessary to see how much it relates which response variable but it's good as it's tells us how much response variable changes for given predictor.
 cor(train_3[ , c("PPERSAUT", "APERSAUT")], train_3[ , "CARAVAN"])
 # Contribution car policies is more correlated with response variable so we exclude Number of car policies
-train_4 = data.frame(train_3[ , !colnames(train_data_3) %in% c("APERSAUT")])
+train_4 = data.frame(train_3[ , !colnames(train_3) %in% c("APERSAUT")])
 ```
 
 
