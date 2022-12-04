@@ -372,10 +372,6 @@ df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 5, 65, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
 ```
 
-```{r}
-df$MGEMLEEF_c
-```
-
 
 
 ```{r}
@@ -390,9 +386,6 @@ df$MGEMLEEF_c
 # PPERSAUT: Contribution car policies
 # CARAVAN:  Number of mobile home policies 0 - 1
 ```
-
-
-
 
 
 # Class Im balance problem
