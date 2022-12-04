@@ -453,19 +453,6 @@ over_test[,i] <- as.factor(over_test[,i])
 
 
 ```{r}
-over_test$MGEMOMV
-```
-
-
-```{r}
-names(over_train)
-```
-
-```{r}
-str(over_test$MINKGEM_c)
-```
-
-```{r}
 over_train$MINKGEM_c = as.numeric(over_train$MINKGEM_c)
 over_test$MINKGEM_c = as.numeric(over_test$MINKGEM_c)
 ```
@@ -475,14 +462,8 @@ over_train$MGEMOMV = as.numeric(over_train$MGEMOMV)
 over_test$MGEMOMV = as.numeric(over_test$MGEMOMV)
 ```
 
-```{r}
-str(over_test$MOSTYPE)
-str(over_train$MOSTYPE)
-```
-
 
 # Model 1
-
 ```{r}
 set.seed(123)
 
@@ -494,7 +475,7 @@ confusionMatrix(as.factor(predictedClass), as.factor(over_test$CARAVAN), positiv
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
 ```
 
-# Building model Correlation 
+# Building model using correlation Analysis
 # Pre processing
 ```{r}
 
@@ -523,6 +504,7 @@ target_cor_df <- data.frame(V86 = cor(train_2[,sort(high)], df_train[, "CARAVAN"
 
 
 cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
+# cor_df
 ## draw correlation matrix.
 #  row.names(cor_df)
 
@@ -541,10 +523,9 @@ excludedDummiesAndVariables
 ```{r}
 train_3 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
 names(train_3)
-# cor(train_3)
 # corrplot(cor(train_3), method = "number")
 # 33 + 4 + 1 (carvan) = 38
-# around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated and are signicant.
+# around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated each other and are significant.
 ```
 
 
@@ -577,9 +558,10 @@ corrplot(cor(subset(train_3 , select = c(-CARAVAN))), method = "square", type = 
 
 
 ```{r}
-#  Contribution car policies &  Number of car policies 
+# corelation between Contribution car policies and number of car policies 
 cor(train_3$PPERSAUT, train_3$APERSAUT)
 # There is a high correlation between car policies and number of car policies we will exclude a variable which has less correlation with response variable.
+# it's not always necessary to see how much it relates which response variable but it's good as it's tells us how much response variable changes for given predictor.
 cor(train_3[ , c("PPERSAUT", "APERSAUT")], train_3[ , "CARAVAN"])
 # Contribution car policies is more correlated with response variable so we exclude Number of car policies
 train_4 = data.frame(train_3[ , !colnames(train_data_3) %in% c("APERSAUT")])
@@ -590,83 +572,31 @@ train_4 = data.frame(train_3[ , !colnames(train_data_3) %in% c("APERSAUT")])
 colnames(train_4)
 ```
 
-# Model fiting Model 2
-```{r}
-set.seed(1234)
-shuffle = sample(1:nrow(df_train), nrow(df_train))
-```
 
 ```{r}
-# MFWEKIND  Household with children V15
-# MOPLLAAG  Lower level education V18
-# MHHUUR Rented house V30
-# MINKM30 :  Income < 30.000 V37
-# MKOOPKLA:  Purchasing power class V43
-# PPERSAUT : Contribution car policies V47
-# CARAVAN : CARAVAN V86
-glm_2 = data.frame(subset(df_train, select = c("MFWEKIND", "MOPLLAAG", "MHHUUR", "MINKM30", "MKOOPKLA", "PPERSAUT", "CARAVAN")))
-glm.2 = glm(CARAVAN ~ ., data = glm_2, family = binomial(link = "logit"))
-glm2.summary <- summary(glm.2)
-glm2.summary
-
+step.wise1 = glm(CARAVAN ~ ., data = train_4, family = binomial(link = "logit"))
+summary(step.wise1)
+# step(step.wise1, direction = "both")
 ```
 
 
 ```{r}
-# Log likelihood for the null model
-glm.2.null = glm.2$null.deviance/-2
-
-# Log likelihood for the proposed model
-glm.2.proposed = glm.2$deviance/-2
-
-r_squared_1 <- (glm.2.null - glm.2.proposed) / glm.2.null
-r_squared_1
+c = glm(formula = CARAVAN ~ MGODRK + MRELSA + MOPLMIDD + MOPLLAAG + 
+    MBERHOOG + MBERZELF + MBERMIDD + MBERARBG + MBERARBO + MSKC + 
+    MHHUUR + MAUT1 + MAUT2 + MKOOPKLA + PWALAND + PPERSAUT + 
+    PFIETS + AWAPART + AWAOREG + ABRAND + APLEZIER + ABYSTAND + 
+    MGEMLEEF_c, family = binomial(link = "logit"), data = train_4)
+summary(c)
+predicted3 = predict(c, df_test, type = "response")
+predictedClass3 = ifelse(predicted3>=0.1, 1, 0)
+confusionMatrix(as.factor(predictedClass3), as.factor(df_test$CARAVAN), positive = "1")
 ```
-# Summary
-# 2 variables are highly significant and 2 are slighty significant rest of variables are not signicat at 0.05.
-# Lower level education, Rented house and Income < 30.000 have negative influence towards response variable.
-# r square value is 0.08346932 from scale of 0 to 1 which is very less so it means predictors we took are not fitting to model hence it's a bad model.
+# explanation
 
 
 
 
-# Model 3 with correlation matrix
-```{r}
-# its worth to compare model with all predictors vs model 2.
-glm_4 = glm(CARAVAN ~  PPERSAUT+MKOOPKLA, data = df_train, family = binomial(link = "logit"))
-
-# summary(glm_5)
-#sum.train$rsq
-
-predicted_4 = predict(glm_4, df_train, type = "response")
-
-predictedClass_4 = ifelse(predicted_4>=0.1, 1, 0)
-actualClass <- df_train$CARAVAN
-LConfusionOutPredicted_5 = table(actualClass, predictedClass_4)
-LConfusionOutPredicted_5
-```
-
-
-
-
-
-
-# Stepwise
-```{r}
-set.seed(123)
-
-c = over_train[c(1:10, 86)]
-step.wise = glm(CARAVAN ~ ., data = c, family = binomial(link = "logit"))
-summary(step.wise)
-step(step.wise, direction = "both")
-```
-We Tired running step wise but it wasn't helping as for 10 variable it returns 9. so it's not really reducing no of predictors. I tried even with 20 variables same results. and my machine got stuck if I do with 86 variables.
-
-```{r}
-names(df_train)
-```
-
-
+# Model 3 with Domain knowledge
 ```{r}
 corrplot(cor(subset(df_train , select = c("MOSTYPE", "PPERSAUT", "MKOOPKLA", "MAUT1", "MAUT0", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
 ```
@@ -694,4 +624,5 @@ auc_ROCR <- auc_ROCR@y.values[[1]]
 auc_ROCR
 
 ```
+Explanation
 AUC roc plot logistic regression Our AUC score is 0.7176653
