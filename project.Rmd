@@ -362,6 +362,19 @@ df$MINKGEM_c
 
 ```
 
+# Converting age into numerical.
+```{r}
+df$MGEMLEEF_c = ifelse(df$MGEMLEEF == 1, 25, df$MGEMLEEF)
+df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 2, 35, df$MGEMLEEF_c)
+df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 3, 45, df$MGEMLEEF_c)
+df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 55, df$MGEMLEEF_c)
+df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 5, 65, df$MGEMLEEF_c)
+df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
+```
+
+```{r}
+df$MGEMLEEF_c
+```
 
 
 
@@ -377,6 +390,8 @@ df$MINKGEM_c
 # PPERSAUT: Contribution car policies
 # CARAVAN:  Number of mobile home policies 0 - 1
 ```
+
+
 
 
 
@@ -437,19 +452,43 @@ over_test[,i] <- as.factor(over_test[,i])
 ```
 
 
+```{r}
+over_test$MGEMOMV
+```
+
 
 ```{r}
-set.seed(2)
-noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
-noofhouseholdFactor = factor(df_train$MGEMOMV, levels = c(1,2,3,4,5,6))
-ageFactor = factor(df_train$MGEMLEEF, levels = c(1,2,3,4,5,6))
+names(over_train)
+```
 
-# str(over_train$drivenGrowers)
-# over_test$CARAVAN
-logit.reg = glm(CARAVAN ~  drivenGrowers + MGEMOMV, data = over_train, family = binomial (link = "logit"))
+```{r}
+str(over_test$MINKGEM_c)
+```
+
+```{r}
+over_train$MINKGEM_c = as.numeric(over_train$MINKGEM_c)
+over_test$MINKGEM_c = as.numeric(over_test$MINKGEM_c)
+```
+
+```{r}
+over_train$MGEMOMV = as.numeric(over_train$MGEMOMV)
+over_test$MGEMOMV = as.numeric(over_test$MGEMOMV)
+```
+
+```{r}
+str(over_test$MOSTYPE)
+str(over_train$MOSTYPE)
+```
+
+
+# Model 1
+
+```{r}
+set.seed(123)
+
+logit.reg = glm(CARAVAN ~ MOSHOOFD + MGEMOMV + OneHouse + MINKGEM_c+MGEMLEEF_c, data = over_train, family = binomial (link = "logit"))
 summary(logit.reg)
-# predicted = predict(logit.reg, over_test, type = "response")
-
+predicted = predict(logit.reg, over_test, type = "response")
 predictedClass = ifelse(predicted>=0.5, 1, 0)
 confusionMatrix(as.factor(predictedClass), as.factor(over_test$CARAVAN), positive = "1")
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
@@ -655,4 +694,4 @@ auc_ROCR <- auc_ROCR@y.values[[1]]
 auc_ROCR
 
 ```
-AUC roc plot logistic regression Our AUC score is 0.6908111
+AUC roc plot logistic regression Our AUC score is 0.7176653
