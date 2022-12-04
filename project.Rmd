@@ -46,6 +46,9 @@ library(GGally)
 library(rpart)
 library(randomForest)
 library(nnet)
+library(ROCR)
+library(Metrics)
+library(caret)
 ```
 
 
@@ -157,7 +160,6 @@ ggplot(df,aes(factor(df$MOSTYPE))) +
     theme(plot.title = element_text(hjust = 0.5))
 
 df$subtype = df$MOSTYPE
-df$subtype
 nrow(df[df$subtype == 33 & df$CARAVAN == 1,])
 nrow(df[df$subtype == 8 & df$CARAVAN == 1,])
 
@@ -253,12 +255,6 @@ sd(df$maintype)
 # Futher we plotted scatter plot and see both variables are highly correlated, we took standard deviation of both variables and sub type having more sd than main type so we can remove main type variable from our regression
 ```
 
-
-# Which varaible to select when they are midly negative correlated?
-
-```{r}
-
-```
 
 
 
@@ -383,31 +379,66 @@ df$MINKGEM_c
 ```
 
 
+
+# Class Im balance problem
+```{r}
+prop.table(table(df$CARAVAN))
+# 94% people didn't buy insurance and only 5% bought. under sampling problem
+
+barplot(prop.table(table(df$CARAVAN)), col = rainbow(2), ylim = c(0,0.7), main = "Class Distribution")
+```
+
+
 # Partition data
 
 ```{r}
 # training data
 df_train = (df[df$ORIGIN == "train",])
+df_train = (df_train[,-1])
+nrow(df_train)
+```
 
+
+```{r}
 #testing data
 df_test = (df[df$ORIGIN == "test",])
-```
-
-
-```{r}
-dim(df_train)
-dim(df_test)
-```
-
-```{r}
-df_train = (df_train[,-1])
 df_test = (df_test[,-1])
+nrow(df_test)
+table(df_test$CARAVAN)
+```
+
+```{r}
+df_test
 ```
 
 
 ```{r}
-max(df$MAANTHUI)
+library(ROSE)
+over_train = ovun.sample(CARAVAN ~ ., data =df_train, method = "over", N =10948)$data
+table(over$CARAVAN)
 ```
+
+```{r}
+over_test = ovun.sample(CARAVAN ~ ., data =df_test, method = "over", N =nrow(df_test))$data
+table(over_test$CARAVAN)
+```
+
+
+
+# converting into factor
+```{r}
+for(i in 1:ncol(over_train)){
+over_train[,i] <- as.factor(over_train[,i])
+}
+```
+
+
+```{r}
+for(i in 1:ncol(over_test)){
+over_test[,i] <- as.factor(over_test[,i])
+}
+```
+
 
 
 ```{r}
@@ -597,58 +628,50 @@ LConfusionOutPredicted_5
 
 
 
-# Stepwise with dummary variables
+
+
+
+# Stepwise
 ```{r}
 set.seed(123)
-dummies = df_train[c("MOSHOOFD")]
-#dummies = data.frame(df_train[c(, "MOSHOOFD", "PPERSAUT")],stringsAsFactors = FALSE)
-# results = fastDummies::dummy_cols(dummies)
-names(df_train)
-data5 = data.frame(df_train[ , colnames(df_train) %in% c("MOSHOOFD", "PPERSAUT", "MKOOPKLA", "CARAVAN")])
-dataf <- dummy_cols(data5, select_columns = c('MOSHOOFD','PPERSAUT', 'MKOOPKLA'), remove_selected_columns = TRUE)
-# names(dataf)
 
-glm_5 = glm(CARAVAN ~  ., data = dataf, family = binomial(link = "logit"))
+c = over_train[c(1:10, 86)]
+step.wise = glm(CARAVAN ~ ., data = c, family = binomial(link = "logit"))
+summary(step.wise)
+step(step.wise, direction = "both")
+```
+We Tired running step wise but it wasn't helping as for 10 variable it returns 9. so it's not really reducing no of predictors. I tried even with 20 variables same results. and my machine got stuck if I do with 86 variables.
+
+```{r}
+names(df_train)
+```
+
+
+```{r}
+corrplot(cor(subset(df_train , select = c("MOSTYPE", "PPERSAUT", "MKOOPKLA", "MAUT1", "MAUT0", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
+```
+
+
+```{r}
+
+glm_5 = glm(formula = CARAVAN ~ MOSTYPE + PPERSAUT + MKOOPKLA+MAUT1+MAUT0+MHKOOP, family = binomial(link = "logit"), 
+    data = over_train)
+
 summary(glm_5)
 
-step(glm_5, direction = "both")
-# when adding two predictors "MOSHOOFD", "PPERSAUT" AIC value is 2380.
-# when adding three predictors "MOSHOOFD", "PPERSAUT", "MKOOPKLA"2376 slightly decreased
+predicted_5 = predict(glm_5, over_train, type = "response")
+
+predictedClass_5 = ifelse(predicted_5>=0.5, 1, 0)
+
+confusionMatrix(as.factor(predictedClass_5), as.factor(over_train$CARAVAN), positive = "1")
+
+pr <- prediction(predictedClass_5,over_train$CARAVAN)
+perf <- performance(pr,measure = "tpr",x.measure = "fpr") 
+plot(perf) > auc(over_train$CARAVAN,predictedClass_5)
+
+auc_ROCR <- performance(pr, measure = "auc")
+auc_ROCR <- auc_ROCR@y.values[[1]]
+auc_ROCR
+
 ```
-
-
-```{r}
-names(df_train)
-```
-
-
-```{r}
-b = glm(formula = CARAVAN ~ MOSHOOFD_1 + MOSHOOFD_2 + MOSHOOFD_3 + 
-    MOSHOOFD_4 + MOSHOOFD_8 + MOSHOOFD_9 + PPERSAUT_6 + PPERSAUT_7 + 
-    MKOOPKLA_7, family = binomial(link = "logit"), data = dataf)
-summary(b)
-
-predicted_5 = predict(glm_5, dataf, type = "response")
-
-predictedClass_5 = ifelse(predicted_5>=0.1, 1, 0)
-actualClass_5 <- dataf$CARAVAN
-LConfusionOutPredicted_6 = table(actualClass_5, predictedClass_5)
-LConfusionOutPredicted_6
-
-totalFalse_6 = LConfusionOutPredicted_6[1] + LConfusionOutPredicted_6[3]
-specificity_6 = (LConfusionOutPredicted_6[1] / totalFalse_6) * 100
-
-LConfusionOutPredicted_6[2] + LConfusionOutPredicted_6[4]
-
-totalTrue_6 = LConfusionOutPredicted_6[2] + LConfusionOutPredicted_6[4]
-sensitivity_6 = (LConfusionOutPredicted_6[4] / totalTrue_6) * 100
-
-totalRecords_6 = totalTrue_6 + totalFalse_6
-error_6 = (LConfusionOutPredicted_6[4] + LConfusionOutPredicted_6[1])/totalRecords_6
-accurracy_6 = (1 - error_6) * 100
-paste0("sensitivity: ", sensitivity_6)
-paste0("specificity: ", specificity_6)
-paste0("error: ", error_6)
-paste0("accurracy: ", accurracy_6)
-```
-
+AUC roc plot logistic regression Our AUC score is 0.6908111
