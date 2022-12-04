@@ -546,31 +546,87 @@ shuffle = sample(1:nrow(df_train), nrow(df_train))
 ```
 
 ```{r}
-# MFWEKIND  Household with children
-# MOPLLAAG  Lower level education
-# MHHUUR Rented house
-# MINKM30 :  Income < 30.000
-# MKOOPKLA:  Purchasing power class 
-# PPERSAUT : Contribution car policies
+# MFWEKIND  Household with children V15
+# MOPLLAAG  Lower level education V18
+# MHHUUR Rented house V30
+# MINKM30 :  Income < 30.000 V37
+# MKOOPKLA:  Purchasing power class V43
+# PPERSAUT : Contribution car policies V47
+# CARAVAN : CARAVAN V86
 glm_2 = data.frame(subset(df_train, select = c("MFWEKIND", "MOPLLAAG", "MHHUUR", "MINKM30", "MKOOPKLA", "PPERSAUT", "CARAVAN")))
 glm.2 = glm(CARAVAN ~ ., data = glm_2, family = binomial(link = "logit"))
 glm2.summary <- summary(glm.2)
 glm2.summary
 
-# Summary
-# 3 coefficient as positive behavior and 3 has negative behavior against response variable
-# lower education is highly significant it means education is highly weighted against response variable
-# PPERSAUT is highly significant the more customer has contribution towards car policy the more he is likely to buy insurance.
-# MINKM30 is not significant it means if customer is earning less than 30k then he might not buy insurance because he can't afford it?
-# Median of deviance is -0.2810 which negative and close to zero telling us predictor we choose badly fit the model we need to try with other combination. 
 ```
 
 
-# Model 3
+```{r}
+# Log likelihood for the null model
+glm.2.null = glm.2$null.deviance/-2
+
+# Log likelihood for the proposed model
+glm.2.proposed = glm.2$deviance/-2
+
+r_squared_1 <- (glm.2.null - glm.2.proposed) / glm.2.null
+r_squared_1
+```
+# Summary
+# 2 variables are highly significant and 2 are slighty significant rest of variables are not signicat at 0.05.
+# Lower level education, Rented house and Income < 30.000 have negative influence towards response variable.
+# r square value is 0.08346932 from scale of 0 to 1 which is very less so it means predictors we took are not fitting to model hence it's a bad model.
+
+
+
+
+# Model 3 with correlation matrix
 ```{r}
 # its worth to compare model with all predictors vs model 2.
-# glm.3 = glm(CARAVAN ~ ., data = df_train, family = binomial(link = "logit"))
-# glm3.summary <- summary(glm.3)
-# glm3.summary
+glm_4 = glm(CARAVAN ~  PPERSAUT+MKOOPKLA, data = df_train, family = binomial(link = "logit"))
+
+# summary(glm_5)
+#sum.train$rsq
+
+predicted_4 = predict(glm_4, df_train, type = "response")
+
+predictedClass_4 = ifelse(predicted_4>=0.1, 1, 0)
+actualClass <- df_train$CARAVAN
+LConfusionOutPredicted_5 = table(actualClass, predictedClass_4)
+LConfusionOutPredicted_5
+```
+
+
+
+# Stepwise with dummary variables
+```{r}
+set.seed(123)
+dummies = df_train[c("MOSHOOFD")]
+#dummies = data.frame(df_train[c(, "MOSHOOFD", "PPERSAUT")],stringsAsFactors = FALSE)
+# results = fastDummies::dummy_cols(dummies)
+data5 = data.frame(df_train[ , colnames(df_train) %in% c("MOSHOOFD", "PPERSAUT", "MKOOPKLA", "CARAVAN")])
+dataf <- dummy_cols(data5, select_columns = c('MOSHOOFD','PPERSAUT', 'MKOOPKLA'), remove_selected_columns = TRUE)
+# names(dataf)
+
+glm_5 = glm(CARAVAN ~  ., data = dataf, family = binomial(link = "logit"))
+summary(glm_5)
+
+step(glm_5, direction = "both")
+# when adding two predictors "MOSHOOFD", "PPERSAUT" AIC value is 2380.
+# when adding three predictors "MOSHOOFD", "PPERSAUT", "MKOOPKLA"2376 slightly decreased
+```
+
+```{r}
+b = glm(formula = CARAVAN ~ MOSHOOFD_1 + MOSHOOFD_2 + MOSHOOFD_3 + 
+    MOSHOOFD_4 + MOSHOOFD_8 + MOSHOOFD_9 + PPERSAUT_6 + PPERSAUT_7 + 
+    MKOOPKLA_7, family = binomial(link = "logit"), data = dataf)
+summary(b)
+
+predicted_5 = predict(glm_5, dataf, type = "response")
+
+predictedClass_5 = ifelse(predicted_5>=0.1, 1, 0)
+actualClass_5 <- dataf$CARAVAN
+LConfusionOutPredicted_6 = table(actualClass_5, predictedClass_5)
+LConfusionOutPredicted_6
+
 ```
 
