@@ -603,6 +603,7 @@ set.seed(123)
 dummies = df_train[c("MOSHOOFD")]
 #dummies = data.frame(df_train[c(, "MOSHOOFD", "PPERSAUT")],stringsAsFactors = FALSE)
 # results = fastDummies::dummy_cols(dummies)
+names(df_train)
 data5 = data.frame(df_train[ , colnames(df_train) %in% c("MOSHOOFD", "PPERSAUT", "MKOOPKLA", "CARAVAN")])
 dataf <- dummy_cols(data5, select_columns = c('MOSHOOFD','PPERSAUT', 'MKOOPKLA'), remove_selected_columns = TRUE)
 # names(dataf)
@@ -614,6 +615,12 @@ step(glm_5, direction = "both")
 # when adding two predictors "MOSHOOFD", "PPERSAUT" AIC value is 2380.
 # when adding three predictors "MOSHOOFD", "PPERSAUT", "MKOOPKLA"2376 slightly decreased
 ```
+
+
+```{r}
+names(df_train)
+```
+
 
 ```{r}
 b = glm(formula = CARAVAN ~ MOSHOOFD_1 + MOSHOOFD_2 + MOSHOOFD_3 + 
@@ -628,5 +635,20 @@ actualClass_5 <- dataf$CARAVAN
 LConfusionOutPredicted_6 = table(actualClass_5, predictedClass_5)
 LConfusionOutPredicted_6
 
+totalFalse_6 = LConfusionOutPredicted_6[1] + LConfusionOutPredicted_6[3]
+specificity_6 = (LConfusionOutPredicted_6[1] / totalFalse_6) * 100
+
+LConfusionOutPredicted_6[2] + LConfusionOutPredicted_6[4]
+
+totalTrue_6 = LConfusionOutPredicted_6[2] + LConfusionOutPredicted_6[4]
+sensitivity_6 = (LConfusionOutPredicted_6[4] / totalTrue_6) * 100
+
+totalRecords_6 = totalTrue_6 + totalFalse_6
+error_6 = (LConfusionOutPredicted_6[4] + LConfusionOutPredicted_6[1])/totalRecords_6
+accurracy_6 = (1 - error_6) * 100
+paste0("sensitivity: ", sensitivity_6)
+paste0("specificity: ", specificity_6)
+paste0("error: ", error_6)
+paste0("accurracy: ", accurracy_6)
 ```
 
