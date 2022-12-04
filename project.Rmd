@@ -581,7 +581,7 @@ c = glm(formula = CARAVAN ~ MGODRK + MRELSA + MOPLMIDD + MOPLLAAG +
     MGEMLEEF_c, family = binomial(link = "logit"), data = train_4)
 summary(c)
 predicted3 = predict(c, df_test, type = "response")
-predictedClass3 = ifelse(predicted3>=0.1, 1, 0)
+predictedClass3 = ifelse(predicted3>=0.5, 1, 0)
 confusionMatrix(as.factor(predictedClass3), as.factor(df_test$CARAVAN), positive = "1")
 ```
 # explanation
@@ -594,6 +594,10 @@ confusionMatrix(as.factor(predictedClass3), as.factor(df_test$CARAVAN), positive
 corrplot(cor(subset(df_train , select = c("MOSTYPE", "PPERSAUT", "MKOOPKLA", "MAUT1", "MAUT0", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
 ```
 
+```{r}
+over_test$PPERSAUT = as.numeric(over_test$PPERSAUT)
+over_train$PPERSAUT = as.numeric(over_train$PPERSAUT)
+```
 
 ```{r}
 
@@ -602,20 +606,59 @@ glm_5 = glm(formula = CARAVAN ~ MOSTYPE + PPERSAUT + MKOOPKLA+MAUT1+MAUT0+MHKOOP
 
 summary(glm_5)
 
-predicted_5 = predict(glm_5, over_train, type = "response")
+predicted_5 = predict(glm_5, over_test, type = "response")
 
 predictedClass_5 = ifelse(predicted_5>=0.5, 1, 0)
 
-confusionMatrix(as.factor(predictedClass_5), as.factor(over_train$CARAVAN), positive = "1")
+confusionMatrix(as.factor(predictedClass_5), as.factor(over_test$CARAVAN), positive = "1")
 
-pr <- prediction(predictedClass_5,over_train$CARAVAN)
+# Area under curve
+pr <- prediction(predictedClass_5,over_test$CARAVAN)
 perf <- performance(pr,measure = "tpr",x.measure = "fpr") 
-plot(perf) > auc(over_train$CARAVAN,predictedClass_5)
+plot(perf) > auc(over_test$CARAVAN,predictedClass_5)
 
 auc_ROCR <- performance(pr, measure = "auc")
 auc_ROCR <- auc_ROCR@y.values[[1]]
-auc_ROCR
 
+auc_ROCR
 ```
 Explanation
 AUC roc plot logistic regression Our AUC score is 0.7176653
+
+# Evaluting performance of model 3
+```{r}
+pred_t <- predict(glm_5, na.action=na.pass)
+# accuracy(pred_t, over_test$CARAVAN)
+hist(pred_t)
+boxplot(pred_t)
+
+##Plotting residual histograms for training and validation data
+resid.t<-residuals(glm_5)
+hist(resid.t)
+```
+
+# Roc
+```{r}
+# library(pROC)
+# r <- roc(over_test$CARAVAN, predictedClass_5)
+# plot.roc(r)
+# auc(r)
+```
+
+# Lift chart
+```{r}
+lift.example <- lift(relevel(as.factor(over_test$CARAVAN), ref="1") ~ predictedClass_5, data = over_test)
+#xyplot(lift.example, plot = "gain")
+```
+
+
+```{r}
+library(gains)
+actual = as.numeric(over_test$CARAVAN)
+predictedClass_5_num = as.numeric(predictedClass_5)
+gain = gains(actual, predictedClass_5_num)
+
+barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentile", ylab = "Mean Response", main = "Decile-wise lift chart")
+
+```
+
