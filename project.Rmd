@@ -407,15 +407,12 @@ nrow(df_test)
 table(df_test$CARAVAN)
 ```
 
-```{r}
-df_test
-```
 
 
 ```{r}
 library(ROSE)
 over_train = ovun.sample(CARAVAN ~ ., data =df_train, method = "over", N =10948)$data
-table(over$CARAVAN)
+table(over_train$CARAVAN)
 ```
 
 ```{r}
@@ -447,30 +444,14 @@ noOfHouseFactor = factor(df_train$MAANTHUI, levels = c(1,2))
 noofhouseholdFactor = factor(df_train$MGEMOMV, levels = c(1,2,3,4,5,6))
 ageFactor = factor(df_train$MGEMLEEF, levels = c(1,2,3,4,5,6))
 
-logit.reg = glm(CARAVAN ~  drivenGrowers + MINKGEM_c, data = df_train, family = binomial (link = "logit"))
-predicted = predict(logit.reg, df_train, type = "response")
-
-predictedClass = ifelse(predicted>=0.1, 1, 0)
-actualClass <- df_train$CARAVAN
-LConfusionOutPredicted = table(actualClass, predictedClass)
-
-
-totalFalse = LConfusionOutPredicted[1] + LConfusionOutPredicted[3]
-specificity = (LConfusionOutPredicted[1] / totalFalse) * 100
-
-totalTrue = LConfusionOutPredicted[2] + LConfusionOutPredicted[4]
-sensitivity = (LConfusionOutPredicted[4] / totalTrue) * 100
-
-totalRecords = totalTrue + totalFalse
-error = (LConfusionOutPredicted[4] + LConfusionOutPredicted[1])/totalRecords
-accurracy = (1 - error) * 100
-paste0("sensitivity: ", sensitivity)
-paste0("specificity: ", specificity)
-paste0("error: ", error)
-paste0("accurracy: ", accurracy)
-
+# str(over_train$drivenGrowers)
+# over_test$CARAVAN
+logit.reg = glm(CARAVAN ~  drivenGrowers + MGEMOMV, data = over_train, family = binomial (link = "logit"))
 summary(logit.reg)
+# predicted = predict(logit.reg, over_test, type = "response")
 
+predictedClass = ifelse(predicted>=0.5, 1, 0)
+confusionMatrix(as.factor(predictedClass), as.factor(over_test$CARAVAN), positive = "1")
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
 ```
 
