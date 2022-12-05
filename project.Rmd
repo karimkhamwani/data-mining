@@ -472,9 +472,11 @@ confusionMatrix(as.factor(predictedClass), as.factor(over_test$CARAVAN), positiv
 # Pre processing
 ```{r}
 
-train_2  = data.frame(df_train[, -c(2,3,4,5)])
-zv = apply(train_2, 2, function(x) length(unique(x)) == 1)
-dfr = train_2[, !zv]
+train_2 = over_train
+
+new_df  = data.frame(df_train[, -c(2,3,4,5)])
+zv = apply(new_df, 2, function(x) length(unique(x)) == 1)
+dfr = new_df[, !zv]
 n=length(colnames(dfr))
 correlationMatrix = cor(dfr[,1:n],use="complete.obs")
 
@@ -489,11 +491,15 @@ high
 # there are 34 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
 ```
 
+```{r}
+table(train_2$CARAVAN)
+```
+
 
 
 ```{r}
 library('rlist')
-target_cor_df <- data.frame(V86 = cor(train_2[,sort(high)], df_train[, "CARAVAN"]))
+target_cor_df <- data.frame(V86 = cor(df_train[,sort(high)], df_train[, "CARAVAN"]))
 
 
 cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
@@ -504,7 +510,7 @@ cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
 excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
 
 
-excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c')
+excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c', 'MGEMLEEF_c')
 
 excludedDummiesAndVariables
 
@@ -514,8 +520,8 @@ excludedDummiesAndVariables
 
 
 ```{r}
-train_3 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
-names(train_3)
+train_2 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
+names(train_2)
 # corrplot(cor(train_3), method = "number")
 # 33 + 4 + 1 (carvan) = 38
 # around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated each other and are significant.
@@ -524,19 +530,19 @@ names(train_3)
 
 ```{r}
 # corelation between no of car policy and carvan
-cor(train_3$APERSAUT, train_3$CARAVAN)
+cor(df_train$APERSAUT, df_train$CARAVAN)
 # # corelation between contribution car policies and carvan
-cor(train_3$PPERSAUT, train_3$CARAVAN)
+cor(df_train$PPERSAUT, df_train$CARAVAN)
 # # corelation between  Purchasing power class and carvan
-cor(train_3$MKOOPKLA, train_3$CARAVAN)
+cor(df_train$MKOOPKLA, df_train$CARAVAN)
 ```
 
 
 ```{r}
-cor_response = data.frame("ind_var" = colnames(train_3), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
+cor_response = data.frame("ind_var" = colnames(train_2), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
 
-for (i in colnames(train_3)){
-    cor_test = cor.test(train_3[, i], train_3[, "CARAVAN"])
+for (i in colnames(train_2)){
+    cor_test = cor.test(train_2[, i], train_2[, "CARAVAN"])
     cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
     cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
 }
@@ -546,47 +552,74 @@ cor_response[order(cor_response$cor_coeff, decreasing = T),]
 
 
 ```{r}
-corrplot(cor(subset(train_3 , select = c(-CARAVAN))), method = "square", type = "upper")
+corrplot(cor(subset(df_train , select = c(-CARAVAN))), method = "square", type = "upper")
 ```
 
 
 ```{r}
 # corelation between Contribution car policies and number of car policies 
-cor(train_3$PPERSAUT, train_3$APERSAUT)
+cor(df_train$PPERSAUT, df_train$APERSAUT)
 # There is a high correlation between car policies and number of car policies we will exclude a variable which has less correlation with response variable.
 # it's not always necessary to see how much it relates which response variable but it's good as it's tells us how much response variable changes for given predictor.
-cor(train_3[ , c("PPERSAUT", "APERSAUT")], train_3[ , "CARAVAN"])
+cor(df_train[ , c("PPERSAUT", "APERSAUT")], df_train[ , "CARAVAN"])
 # Contribution car policies is more correlated with response variable so we exclude Number of car policies
-train_4 = data.frame(train_3[ , !colnames(train_3) %in% c("APERSAUT")])
+train_2 = data.frame(train_2[ , !colnames(train_2) %in% c("APERSAUT")])
 ```
 
 
 ```{r}
-colnames(train_4)
+colnames(train_2)
+```
+
+```{r}
+for(i in 1:ncol(train_4)){
+train_4[,i] <- as.factor(train_4[,i])
+}
+```
+
+```{r}
+table(train_2$CARAVAN)
 ```
 
 
 ```{r}
-step.wise1 = glm(CARAVAN ~ ., data = train_4, family = binomial(link = "logit"))
+step.wise1 = glm(CARAVAN ~ ., data = train_2, family = binomial(link = "logit"))
 summary(step.wise1)
-# step(step.wise1, direction = "both")
+step(step.wise1, direction = "forward")
+```
+
+```{r}
+str(over_test)
 ```
 
 
 ```{r}
-c = glm(formula = CARAVAN ~ MGODRK + MRELSA + MOPLMIDD + MOPLLAAG + 
-    MBERHOOG + MBERZELF + MBERMIDD + MBERARBG + MBERARBO + MSKC + 
-    MHHUUR + MAUT1 + MAUT2 + MKOOPKLA + PWALAND + PPERSAUT + 
-    PFIETS + AWAPART + AWAOREG + ABRAND + APLEZIER + ABYSTAND + 
-    MGEMLEEF_c, family = binomial(link = "logit"), data = train_4)
-summary(c)
-predicted3 = predict(c, df_test, type = "response")
+# MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
+#     MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFALLEEN + 
+#     MFGEKIND + MFWEKIND + MOPLHOOG + MOPLMIDD + MOPLLAAG + MBERHOOG + 
+#     MBERZELF + MBERBOER + MBERMIDD + MBERARBG + MBERARBO + MSKA + 
+#     MSKB1 + MSKB2 + MSKC + MHHUUR + MAUT1 + MAUT2 + MAUT0 + 
+#     MZFONDS + MINKM30 + MINK3045 + MINK4575 + MINKGEM + MKOOPKLA + 
+#     PWALAND + PPERSAUT + PBESAUT + PBROM + PZEILPL + PFIETS + 
+#     PINBOED + AWAPART + AWABEDR + AMOTSCO + AVRAAUT + AAANHANG + 
+#     ATRACTOR + AWERKT + ALEVEN + APERSONG + AGEZONG + AWAOREG + 
+#     ABRAND + APLEZIER + ABYSTAND
+
+# List of variables suggested by stepwise foward by most to least siginificat we will pick first few and run the model so we avoid over fitting model
+```
+
+
+```{r}
+c = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
+    MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFWEKIND + MOPLMIDD, family = binomial(link = "logit"), data = train_2)
+# summary(c)
+predicted3 = predict(c, over_test, type = "response")
 predictedClass3 = ifelse(predicted3>=0.5, 1, 0)
-confusionMatrix(as.factor(predictedClass3), as.factor(df_test$CARAVAN), positive = "1")
+confusionMatrix(as.factor(predictedClass3), as.factor(over_test$CARAVAN), positive = "1")
 ```
 # explanation
 
-
+# when removing MBERMIDD (middle management) from predictors Sensitivity jump from 45 to 51 while Accuracy is constant 0.62
 
 
 # Model 3 with Domain knowledge
