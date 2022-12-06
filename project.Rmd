@@ -58,6 +58,7 @@ library(plyr)
 library(rlist)
 library(pROC)
 library(ROSE)
+library(plotly)
 ```
 
 
@@ -101,9 +102,20 @@ desc = skim(df)
 
 # Out liers
 ```{r}
+plot_ly(x = ~df$MINKM30_c, y = ~df$MOSTYPE, type = "box", color = df$MOSTYPE)
 
+# After having converted the categorical variable for income to numerical, here we take income less than 3000 against customer sub-categories and draw a box plot. From the below box plot, we can see that as soon as income crosses 10K, we begint to see a few outliers for certain sub-categories. Another important thing to note is that when income jumps above 20K, the distance of outliers starts to increase. We could say that we are seeing extreme outliers in income levels ranging from 25K to 30K. 
+
+# Now the question is if we should keep outliers in our analysis, whether mild or extreme or delete both of them and then proceed?
 ```
 
+```{r}
+plot_ly(y = ~df$MOSTYPE, x = ~df$MINK3045_c, type = "box", color = df$MOSTYPE)
+```
+
+```{r}
+plot_ly(x = df$MINK4575_c, y = df$MOSTYPE, type = "box", color = df$MOSTYPE)
+```
 
 # Plot graphs
 ```{r}
