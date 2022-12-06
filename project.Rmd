@@ -634,8 +634,10 @@ over_train$PPERSAUT = as.numeric(over_train$PPERSAUT)
 
 ```{r}
 
-glm_5 = glm(formula = CARAVAN ~ MOSTYPE + PPERSAUT + MKOOPKLA+MAUT1+MAUT0+MHKOOP, family = binomial(link = "logit"), 
+glm_5 = glm(formula = CARAVAN ~ MOSTYPE + PPERSAUT + MKOOPKLA+MAUT1+MHKOOP, family = binomial(link = "logit"), 
     data = over_train)
+
+#MFWEKIND
 
 summary(glm_5)
 
@@ -690,6 +692,8 @@ library(gains)
 actual = as.numeric(over_test$CARAVAN)
 predictedClass_5_num = as.numeric(predictedClass_5)
 gain = gains(actual, predictedClass_5_num)
+
+gain$depth
 
 barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentile", ylab = "Mean Response", main = "Decile-wise lift chart")
 
