@@ -49,6 +49,12 @@ library(nnet)
 library(ROCR)
 library(Metrics)
 library(caret)
+library(pscl)
+library(forecast)
+library(rpart)
+library(rattle)
+library(ggplot2)
+library(plyr)
 ```
 
 
@@ -99,11 +105,6 @@ desc = skim(df)
 
 # Plot graphs
 ```{r}
-library(ggplot2)
-library(plyr)
-
-
-
 unInsuredRows = df[df$CARAVAN == 0,]
 insuredRows = df[df$CARAVAN == 1,]
 
@@ -248,17 +249,15 @@ corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", 
 # Which varaible to select when they are highly postive correlated?
 
 ```{r}
-plot(df$subtype, df$maintype, main="Scatterplot Between Sub type and main type", xlab="Customer Sub type ", ylab="Customer main type ", pch=19)
-
-sd(df$subtype)
-sd(df$maintype)
-# Futher we plotted scatter plot and see both variables are highly correlated, we took standard deviation of both variables and sub type having more sd than main type so we can remove main type variable from our regression
+cor(df$subtype, df$CARAVAN)
+cor(df$maintype, df$CARAVAN)
+# we will choose which have high corelation with response variable in this case both are weak correlated doesn't matter what we really choose
+# we will choose maintype
 ```
 
 
+# Categorizing Data
 
-
-# Dummies conversion
 # Number of Houses
 ```{r}
 table(df$MAANTHUI)
@@ -283,8 +282,6 @@ df$framers = ifelse(df$MOSTYPE %in% c(40,41), 1, 0)
 df$livingWell = ifelse(df$MOSTYPE %in% c(20,21,22,23,24), 1, 0)
 df$retired = ifelse(df$MOSTYPE %in% c(29,30,31,32), 1, 0)
 df$successful = ifelse(df$MOSTYPE %in% c(1,2,3,4,5), 1, 0)
-
-
 
 dat <- data.frame(
   Categorized_Customers = factor(c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful"), levels=c("averageFamily", "loners", "conservativeFamilies", "crusingSeniors", "drivenGrowers", "grownups", "framers", "livingWell", "retired", "successful")),
@@ -426,11 +423,11 @@ table(over_train$CARAVAN)
 ```{r}
 over_test = ovun.sample(CARAVAN ~ ., data =df_test, method = "over", N =nrow(df_test))$data
 table(over_test$CARAVAN)
+# we are not fixing sampling problem in test data, i did this becuase i was having error with doing prediction
 ```
 
 
-
-# converting into factor
+# Convert train data set into factor
 ```{r}
 for(i in 1:ncol(over_train)){
 over_train[,i] <- as.factor(over_train[,i])
@@ -438,6 +435,7 @@ over_train[,i] <- as.factor(over_train[,i])
 ```
 
 
+# Convert test data set into factor
 ```{r}
 for(i in 1:ncol(over_test)){
 over_test[,i] <- as.factor(over_test[,i])
@@ -446,13 +444,31 @@ over_test[,i] <- as.factor(over_test[,i])
 
 
 ```{r}
-over_train$MINKGEM_c = as.numeric(over_train$MINKGEM_c)
 over_test$MINKGEM_c = as.numeric(over_test$MINKGEM_c)
+over_train$MINKGEM_c = as.numeric(over_train$MINKGEM_c)
+
+over_test$MGEMLEEF_c = as.numeric(over_test$MGEMLEEF_c)
+over_train$MGEMLEEF_c = as.numeric(over_train$MGEMLEEF_c)
+
 ```
 
+
+
+# Draw Confusion matrix function
+
 ```{r}
-over_train$MGEMOMV = as.numeric(over_train$MGEMOMV)
-over_test$MGEMOMV = as.numeric(over_test$MGEMOMV)
+drewSummary = function(model) {
+  summary(model)
+}
+```
+
+
+```{r}
+drewMatrix = function(model, test_data) {
+   predicted = predict(model, test_data, type = "response")
+   predictedClass = ifelse(predicted>=0.5, 1, 0)
+   confusionMatrix(as.factor(predictedClass), as.factor(test_data$CARAVAN), positive = "1")
+}
 ```
 
 
@@ -461,12 +477,15 @@ over_test$MGEMOMV = as.numeric(over_test$MGEMOMV)
 set.seed(123)
 
 logit.reg = glm(CARAVAN ~ MOSHOOFD + MGEMOMV + OneHouse + MINKGEM_c+MGEMLEEF_c, data = over_train, family = binomial (link = "logit"))
-summary(logit.reg)
-predicted = predict(logit.reg, over_test, type = "response")
-predictedClass = ifelse(predicted>=0.5, 1, 0)
-confusionMatrix(as.factor(predictedClass), as.factor(over_test$CARAVAN), positive = "1")
+
+logit.reg$xlevels[["MGEMOMV"]] <- union(logit.reg$xlevels[["MGEMOMV"]], levels(over_test$MGEMOMV))
+
+drewSummary(logit.reg)
+drewMatrix(logit.reg, over_test)
+
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
 ```
+
 
 # Building model using correlation Analysis
 # Pre processing
@@ -624,41 +643,47 @@ confusionMatrix(as.factor(predictedClass3), as.factor(over_test$CARAVAN), positi
 
 # Model 3 with Domain knowledge
 ```{r}
-corrplot(cor(subset(df_train , select = c("MOSTYPE", "PPERSAUT", "MKOOPKLA", "MAUT1", "MAUT0", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
-```
-
-```{r}
-over_test$PPERSAUT = as.numeric(over_test$PPERSAUT)
-over_train$PPERSAUT = as.numeric(over_train$PPERSAUT)
+corrplot(cor(subset(df_train , select = c("PBRAND", "MOSTYPE", "PPERSAUT", "MKOOPKLA", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
 ```
 
 ```{r}
 
-glm_5 = glm(formula = CARAVAN ~ MOSTYPE + PPERSAUT + MKOOPKLA+MAUT1+MHKOOP, family = binomial(link = "logit"), 
+glm_5 = glm(formula = CARAVAN ~ PBRAND + MOSTYPE + PPERSAUT + MKOOPKLA+MHKOOP, family = binomial(link = "logit"), 
     data = over_train)
 
 #MFWEKIND
 
 summary(glm_5)
+#glm_5$residuals
+
+glm_5$xlevels[["PPERSAUT"]] <- union(glm_5$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
 
 predicted_5 = predict(glm_5, over_test, type = "response")
 
-predictedClass_5 = ifelse(predicted_5>=0.5, 1, 0)
+predictedClass_5 = ifelse(predicted_5>=0.4, 1, 0)
 
 confusionMatrix(as.factor(predictedClass_5), as.factor(over_test$CARAVAN), positive = "1")
 
 # Area under curve
 pr <- prediction(predictedClass_5,over_test$CARAVAN)
-perf <- performance(pr,measure = "tpr",x.measure = "fpr") 
+perf <- performance(pr,measure = "tpr",x.measure = "fpr")
 plot(perf) > auc(over_test$CARAVAN,predictedClass_5)
 
 auc_ROCR <- performance(pr, measure = "auc")
 auc_ROCR <- auc_ROCR@y.values[[1]]
 
 auc_ROCR
+
+pR2(glm_5)['McFadden']
+
+accuracy(predictedClass_5, as.numeric(over_test$CARAVAN))
+
 ```
 Explanation
 AUC roc plot logistic regression Our AUC score is 0.7176653
+
+
+
 
 # Evaluting performance of model 3
 ```{r}
@@ -696,6 +721,33 @@ gain = gains(actual, predictedClass_5_num)
 gain$depth
 
 barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentile", ylab = "Mean Response", main = "Decile-wise lift chart")
+
+```
+
+
+# Decision tree.
+```{r}
+fit1 <- rpart(formula=CARAVAN ~ .,data=over_train,control=rpart.control(minsplit=20, minbucket=1, cp=0.008))
+
+glm_6 = glm(formula = CARAVAN ~  PPERSAUT+MOSTYPE+PBRAND+MBERHOOG+MBERMIDD, family = binomial(link = "logit"), 
+    data = over_train)
+
+
+glm_6$xlevels[["PPERSAUT"]] <- union(glm_6$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
+
+predicted_6 = predict(glm_6, over_test, type = "response")
+
+predictedClass_6 = ifelse(predicted_6>=0.5, 1, 0)
+
+
+confusionMatrix(as.factor(predictedClass_6), as.factor(over_test$CARAVAN), positive = "1")
+
+accuracy(predictedClass_6, as.numeric(over_test$CARAVAN))
+
+pR2(glm_6)['McFadden']
+```
+
+
 
 ```
 
