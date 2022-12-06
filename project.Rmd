@@ -55,6 +55,9 @@ library(rpart)
 library(rattle)
 library(ggplot2)
 library(plyr)
+library(rlist)
+library(pROC)
+library(ROSE)
 ```
 
 
@@ -75,7 +78,6 @@ dimension = dim(df)
 
 totalRows = dimension[1]
 
-str(df)
 # data type of 86 variables is number and 1 variable is char, our target variable is number of policies bought remaining variables are categorical numeric.
 
 head(df)
@@ -85,8 +87,8 @@ head(df)
 # Descriptive analysis
 ```{r}
 # summary of main data set
-stat.desc(df)
-summary(df)
+# stat.desc(df)
+# summary(df)
 
 # missing values in main data set
 paste0("Total missing values:", sum(is.na(df)))
@@ -355,7 +357,6 @@ df$MINK123M_c = ifelse(df$MINK123M_c == 9, 1 * 123000, df$MINK123M_c)
 # Average income
 df$MINKGEM_c = (df$MINK123M_c + df$MINK7512_c + df$MINK4575_c + df$MINK3045_c + df$MINKM30_c)/5
 hist(df$MINKGEM_c)
-df$MINKGEM_c
 
 ```
 
@@ -415,7 +416,6 @@ table(df_test$CARAVAN)
 
 
 ```{r}
-library(ROSE)
 over_train = ovun.sample(CARAVAN ~ ., data =df_train, method = "over", N =10948)$data
 table(over_train$CARAVAN)
 ```
@@ -441,6 +441,7 @@ for(i in 1:ncol(over_test)){
 over_test[,i] <- as.factor(over_test[,i])
 }
 ```
+
 
 
 ```{r}
@@ -510,30 +511,18 @@ high
 # there are 34 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
 ```
 
-```{r}
-table(train_2$CARAVAN)
-```
-
-
 
 ```{r}
-library('rlist')
-target_cor_df <- data.frame(V86 = cor(df_train[,sort(high)], df_train[, "CARAVAN"]))
+target_cor_df = data.frame(CARAVAN = cor(df_train[,sort(high)], df_train[, "CARAVAN"]))
 
 
 cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
-# cor_df
-## draw correlation matrix.
-#  row.names(cor_df)
 
 excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
-
 
 excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c', 'MGEMLEEF_c')
 
 excludedDummiesAndVariables
-
-
 # There are 33 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them.
 ```
 
@@ -556,16 +545,23 @@ cor(df_train$PPERSAUT, df_train$CARAVAN)
 cor(df_train$MKOOPKLA, df_train$CARAVAN)
 ```
 
+```{r}
+new_train_2 = train_2
+for(i in 1:ncol(new_train_2)){
+new_train_2[,i] <- as.numeric(new_train_2[,i])
+}
+```
+
+
 
 ```{r}
-cor_response = data.frame("ind_var" = colnames(train_2), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
+cor_response = data.frame("ind_var" = colnames(new_train_2), "dep_var" = "CARAVAN", "cor_coeff" = 0, "p_values" = 0)
 
-for (i in colnames(train_2)){
-    cor_test = cor.test(train_2[, i], train_2[, "CARAVAN"])
+for (i in colnames(new_train_2)){
+    cor_test <- cor.test(new_train_2[,i], new_train_2[,"CARAVAN"])
     cor_response[cor_response$ind_var == i, "correlation_coefficient"] = cor_test$estimate
     cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
 }
-
 cor_response[order(cor_response$cor_coeff, decreasing = T),]
 ```
 
@@ -587,28 +583,9 @@ train_2 = data.frame(train_2[ , !colnames(train_2) %in% c("APERSAUT")])
 
 
 ```{r}
-colnames(train_2)
-```
-
-```{r}
-for(i in 1:ncol(train_4)){
-train_4[,i] <- as.factor(train_4[,i])
-}
-```
-
-```{r}
-table(train_2$CARAVAN)
-```
-
-
-```{r}
 step.wise1 = glm(CARAVAN ~ ., data = train_2, family = binomial(link = "logit"))
 summary(step.wise1)
-step(step.wise1, direction = "forward")
-```
-
-```{r}
-str(over_test)
+#step(step.wise1, direction = "forward")
 ```
 
 
@@ -629,12 +606,13 @@ str(over_test)
 
 
 ```{r}
-c = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
+model.2 = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
     MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFWEKIND + MOPLMIDD, family = binomial(link = "logit"), data = train_2)
-# summary(c)
-predicted3 = predict(c, over_test, type = "response")
-predictedClass3 = ifelse(predicted3>=0.5, 1, 0)
-confusionMatrix(as.factor(predictedClass3), as.factor(over_test$CARAVAN), positive = "1")
+
+model.2$xlevels[["MGEMOMV"]] <- union(model.2$xlevels[["MGEMOMV"]], levels(over_test$MGEMOMV))
+
+drewSummary(model.2)
+drewMatrix(model.2, over_test)
 ```
 # explanation
 
@@ -648,77 +626,63 @@ corrplot(cor(subset(df_train , select = c("PBRAND", "MOSTYPE", "PPERSAUT", "MKOO
 
 ```{r}
 
-glm_5 = glm(formula = CARAVAN ~ PBRAND + MOSTYPE + PPERSAUT + MKOOPKLA+MHKOOP, family = binomial(link = "logit"), 
+model.3 = glm(formula = CARAVAN ~ PBRAND + MOSTYPE + PPERSAUT + MKOOPKLA+MHKOOP, family = binomial(link = "logit"), 
     data = over_train)
 
-#MFWEKIND
+model.3$xlevels[["PPERSAUT"]] <- union(model.3$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
 
-summary(glm_5)
-#glm_5$residuals
+predicted_3 = predict(model.3, over_test, type = "response")
+predictedClass_3 = ifelse(predicted_3>=0.5, 1, 0)
 
-glm_5$xlevels[["PPERSAUT"]] <- union(glm_5$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
 
-predicted_5 = predict(glm_5, over_test, type = "response")
-
-predictedClass_5 = ifelse(predicted_5>=0.4, 1, 0)
-
-confusionMatrix(as.factor(predictedClass_5), as.factor(over_test$CARAVAN), positive = "1")
+drewMatrix(model.3, over_test)
 
 # Area under curve
-pr <- prediction(predictedClass_5,over_test$CARAVAN)
+pr <- prediction(predictedClass_3,over_test$CARAVAN)
 perf <- performance(pr,measure = "tpr",x.measure = "fpr")
-plot(perf) > auc(over_test$CARAVAN,predictedClass_5)
+plot(perf) > auc(over_test$CARAVAN,predictedClass_3)
 
 auc_ROCR <- performance(pr, measure = "auc")
 auc_ROCR <- auc_ROCR@y.values[[1]]
-
 auc_ROCR
 
-pR2(glm_5)['McFadden']
-
-accuracy(predictedClass_5, as.numeric(over_test$CARAVAN))
+pR2(model.3)['McFadden']
+accuracy(predictedClass_3, as.numeric(over_test$CARAVAN))
 
 ```
 Explanation
 AUC roc plot logistic regression Our AUC score is 0.7176653
 
 
-
-
 # Evaluting performance of model 3
 ```{r}
-pred_t <- predict(glm_5, na.action=na.pass)
-# accuracy(pred_t, over_test$CARAVAN)
+pred_t <- predict(model.3, na.action=na.pass)
 hist(pred_t)
 boxplot(pred_t)
 
 ##Plotting residual histograms for training and validation data
-resid.t<-residuals(glm_5)
+resid.t<-residuals(model.3)
 hist(resid.t)
 ```
 
 # Roc
 ```{r}
-# library(pROC)
-# r <- roc(over_test$CARAVAN, predictedClass_5)
-# plot.roc(r)
-# auc(r)
+r <- roc(over_test$CARAVAN, predicted_3)
+plot.roc(r)
 ```
 
 # Lift chart
 ```{r}
-lift.example <- lift(relevel(as.factor(over_test$CARAVAN), ref="1") ~ predictedClass_5, data = over_test)
+lift.example <- lift(relevel(as.factor(over_test$CARAVAN), ref="1") ~ predicted_3, data = over_test)
 #xyplot(lift.example, plot = "gain")
 ```
 
-
+# Decil Wise chart
 ```{r}
 library(gains)
 actual = as.numeric(over_test$CARAVAN)
-predictedClass_5_num = as.numeric(predictedClass_5)
-gain = gains(actual, predictedClass_5_num)
-
-gain$depth
+predicted_3_num = as.numeric(predicted_3)
+gain = gains(actual, predicted_3_num)
 
 barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentile", ylab = "Mean Response", main = "Decile-wise lift chart")
 
