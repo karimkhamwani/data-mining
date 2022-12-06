@@ -367,8 +367,6 @@ df$MINKGEM_c
 ```
 
 
-
-
 ```{r}
 # MOSTYPE : customer subtype
 # MFWEKIND: Household with children
