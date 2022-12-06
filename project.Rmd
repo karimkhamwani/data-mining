@@ -370,8 +370,6 @@ df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 5, 65, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
 ```
 
-
-
 ```{r}
 # MOSTYPE : customer subtype
 # MFWEKIND: Household with children
