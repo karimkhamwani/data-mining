@@ -482,6 +482,13 @@ drewMatrix = function(model, test_data) {
 }
 ```
 
+```{r}
+drewAnova = function(model1, model2){
+    anova(model1, model2, test = 'Chisq')
+}
+```
+
+
 
 # Model 1
 ```{r}
@@ -493,8 +500,10 @@ logit.reg$xlevels[["MGEMOMV"]] <- union(logit.reg$xlevels[["MGEMOMV"]], levels(o
 
 drewSummary(logit.reg)
 drewMatrix(logit.reg, over_test)
+# drewAnova(logit.reg)
 
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
+# difference in deviance =  Null deviance (15177) - 14398 = 870
 ```
 
 
@@ -615,6 +624,7 @@ summary(step.wise1)
 ```
 
 
+# Model 2
 ```{r}
 model.2 = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
     MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFWEKIND + MOPLMIDD, family = binomial(link = "logit"), data = train_2)
@@ -623,6 +633,7 @@ model.2$xlevels[["MGEMOMV"]] <- union(model.2$xlevels[["MGEMOMV"]], levels(over_
 
 drewSummary(model.2)
 drewMatrix(model.2, over_test)
+# difference in deviance =  Null deviance (15177) - 13808 = 1369
 ```
 # explanation
 
@@ -644,7 +655,7 @@ model.3$xlevels[["PPERSAUT"]] <- union(model.3$xlevels[["PPERSAUT"]], levels(ove
 predicted_3 = predict(model.3, over_test, type = "response")
 predictedClass_3 = ifelse(predicted_3>=0.5, 1, 0)
 
-
+drewSummary(model.3)
 drewMatrix(model.3, over_test)
 
 # Area under curve
@@ -658,7 +669,7 @@ auc_ROCR
 
 pR2(model.3)['McFadden']
 accuracy(predictedClass_3, as.numeric(over_test$CARAVAN))
-
+# difference in deviance =  Null deviance (15177) - 12152 = 3025
 ```
 Explanation
 AUC roc plot logistic regression Our AUC score is 0.7176653
@@ -703,11 +714,14 @@ barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentil
 ```{r}
 fit1 <- rpart(formula=CARAVAN ~ .,data=over_train,control=rpart.control(minsplit=20, minbucket=1, cp=0.008))
 
-glm_6 = glm(formula = CARAVAN ~  PPERSAUT+MOSTYPE+PBRAND+MBERHOOG+MBERMIDD, family = binomial(link = "logit"), 
+fit1
+
+glm_6 = glm(formula = CARAVAN ~  PPERSAUT+MOSTYPE+PBRAND+MBERHOOG+MBERMIDD, family = binomial(link = "logit"),
     data = over_train)
 
 
 glm_6$xlevels[["PPERSAUT"]] <- union(glm_6$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
+summary(glm_6)
 
 predicted_6 = predict(glm_6, over_test, type = "response")
 
@@ -719,9 +733,13 @@ confusionMatrix(as.factor(predictedClass_6), as.factor(over_test$CARAVAN), posit
 accuracy(predictedClass_6, as.numeric(over_test$CARAVAN))
 
 pR2(glm_6)['McFadden']
+# difference in deviance =  Null deviance (15177) - 12069 = 3108
 ```
 
 
-
+# Model comparsion using anova test
+```{r}
+anova(logit.reg,model.2,model.3,glm_6,test = 'Chisq')
 ```
+
 
