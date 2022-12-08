@@ -233,7 +233,7 @@ df$hasThreeHouseHold = ifelse(df$noofhousehold == 3, 1, 0)
 # Customer belongs to Lower class large families
 
 
-# Correlation Analysis
+# Mod 1 - Correlation Analysis
 ```{r}
 corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", "CARAVAN")]), method = "number")
 
