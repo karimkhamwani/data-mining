@@ -489,6 +489,36 @@ drewAnova = function(model1, model2){
 ```
 
 
+```{r}
+drewROC = function(model){
+   predicted = predict(model, over_test, type = "response")
+   predictedClass = ifelse(predicted>=0.5, 1, 0)
+   r = roc(over_test$CARAVAN, predictedClass)
+   plot.roc(r)
+}
+```
+
+
+```{r}
+getRMSE = function(predictedClass){
+  accuracy(predictedClass, as.numeric(over_test$CARAVAN))[2]
+}
+```
+
+
+# Correlation of Model 1 predictors
+```{r}
+new_data = over_train
+new_data$MOSHOOFD = as.numeric(new_data$MOSHOOFD)
+new_data$MGEMOMV = as.numeric(new_data$MGEMOMV)
+new_data$MINKGEM = as.numeric(new_data$MINKGEM)
+new_data$MGEMLEEF = as.numeric(new_data$MGEMLEEF)
+new_data$CARAVAN = as.numeric(new_data$CARAVAN)
+new_data$OneHouse = as.numeric(new_data$OneHouse)
+
+corrplot(cor(subset(new_data , select = c("MOSHOOFD", "MGEMOMV", "OneHouse", "MINKGEM", "MGEMLEEF", "CARAVAN"))), method = "number", type = "upper")
+```
+
 
 # Model 1
 ```{r}
@@ -500,14 +530,14 @@ logit.reg$xlevels[["MGEMOMV"]] <- union(logit.reg$xlevels[["MGEMOMV"]], levels(o
 
 drewSummary(logit.reg)
 drewMatrix(logit.reg, over_test)
+drewROC(logit.reg)
 # drewAnova(logit.reg)
 
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
-# difference in deviance =  Null deviance (15177) - 14398 = 870
+# difference in deviance =  Null deviance (15177) - 14398 = 872
 ```
 
-
-# Building model using correlation Analysis
+# Model 2 | Building model using correlation Analysis
 # Pre processing
 ```{r}
 
@@ -646,7 +676,6 @@ corrplot(cor(subset(df_train , select = c("PBRAND", "MOSTYPE", "PPERSAUT", "MKOO
 ```
 
 ```{r}
-
 model.3 = glm(formula = CARAVAN ~ PBRAND + MOSTYPE + PPERSAUT + MKOOPKLA+MHKOOP, family = binomial(link = "logit"), 
     data = over_train)
 
@@ -657,6 +686,7 @@ predictedClass_3 = ifelse(predicted_3>=0.5, 1, 0)
 
 drewSummary(model.3)
 drewMatrix(model.3, over_test)
+getRMSE(predictedClass_3)
 
 # Area under curve
 pr <- prediction(predictedClass_3,over_test$CARAVAN)
@@ -668,7 +698,6 @@ auc_ROCR <- auc_ROCR@y.values[[1]]
 auc_ROCR
 
 pR2(model.3)['McFadden']
-accuracy(predictedClass_3, as.numeric(over_test$CARAVAN))
 # difference in deviance =  Null deviance (15177) - 12152 = 3025
 ```
 Explanation
@@ -686,10 +715,9 @@ resid.t<-residuals(model.3)
 hist(resid.t)
 ```
 
-# Roc
+# ROC Model 3
 ```{r}
-r <- roc(over_test$CARAVAN, predicted_3)
-plot.roc(r)
+drewROC(model.3)
 ```
 
 # Lift chart
@@ -724,8 +752,7 @@ fit1 <- rpart(formula=CARAVAN ~ .,data=over_train,method = 'class', control=rpar
 fancyRpartPlot(fit1)
 
 
-glm_6 = glm(formula = CARAVAN ~  PPERSAUT+MOSTYPE+PBRAND+MBERHOOG+MBERMIDD, family = binomial(link = "logit"),
-    data = over_train)
+glm_6 = glm(formula = CARAVAN ~  PPERSAUT+MOSTYPE+PBRAND+MBERHOOG+MBERMIDD, family = binomial(link = "logit"),data = over_train)
 
 
 glm_6$xlevels[["PPERSAUT"]] <- union(glm_6$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
@@ -742,6 +769,11 @@ accuracy(predictedClass_6, as.numeric(over_test$CARAVAN))
 
 pR2(glm_6)['McFadden']
 # difference in deviance =  Null deviance (15177) - 12069 = 3108
+```
+
+# ROC model 4
+```{r}
+drewROC(glm_6)
 ```
 
 
