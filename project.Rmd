@@ -7,8 +7,9 @@ output: html_document
 
 ```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
-```
 
+```
+INSTALLING LIBRARIES 
 ```{r}
 # install.packages("Hmisc")
 # install.packages("pastecs")
@@ -21,7 +22,6 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("Amelia")
 # install.packages("GGally")
 ```
-
 
 ```{r}
 library(ggplot2)
@@ -64,68 +64,51 @@ library(rpart.plot)
 library(RColorBrewer)
 ```
 
-
-
-
+LOADING/READ FILE
 ```{r}
-# reading file
-df = readr::read_csv("caravan-insurance-challenge.csv")
+df = readr::read_csv("caravan-insurance-challenge.csv", show_col_types = FALSE)
 ```
 
-
-# Step 1 Data Visulation and exploration
+# INTITUTIONAL EXPLORATION THROUGH VISUALIZATION
 
 ```{r}
-dimension = dim(df)
-# total number of observations are 9822
-# total number of variables are 87 
-
-totalRows = dimension[1]
-
-# data type of 86 variables is number and 1 variable is char, our target variable is number of policies bought remaining variables are categorical numeric.
-
-head(df)
-# explore top 5 rows
+dim(df)
 ```
+Total number of observations are 9822
+Total number of variables are 86 ignoring the 1st column which is meaningless for our data 
 
-# Descriptive analysis
+# DESCRIPTIVE ANALYSIS
 ```{r}
-# summary of main data set
-# stat.desc(df)
-# summary(df)
+skim(df)
 
-# missing values in main data set
-paste0("Total missing values:", sum(is.na(df)))
+# There are no missing values in our data or NANs [Not A Number]
+```
+# PLOTTING GRAPHS
+```{r}
+Uninsured =length(which(df$CARAVAN == 0))
+Insured = length(which(df$CARAVAN == 1))
+
+# We use this function to find out the total count of rows where customers were either insured = 1 or uninsured = 0 for Caravan Insurance Only
 ```
 
 ```{r}
-desc = skim(df)
+frame = data.frame(Policy_Status = factor(c("Uninsured","Insured"), levels=c("Uninsured","Insured")), Count = c(Uninsured,Insured))
 ```
 
-# Plot graphs
 ```{r}
-unInsuredRows = df[df$CARAVAN == 0,]
-insuredRows = df[df$CARAVAN == 1,]
+plot_ly(frame, x = ~Policy_Status, y = ~Count, type = "bar", color = frame$Policy_Status, colors = c("Purple", "Gold")) %>% 
+  layout(title = "<b>Insuraned vs Uninsured<b>", legend = list(title = list(text ='<b> Policy Status </b>')))
 
-peopleNotInsuredWithCaravan  = nrow(unInsuredRows);
-peopleInsuredWithCaravan = nrow(insuredRows);
+# From the below graph we mapped those who were insured for Caravan insurance against those who were not. 
 
+# We see that the count of Uninsured = 9236 vs Insured = 586
 
-ratioOfPeopleWhoDontBought = peopleNotInsuredWithCaravan/totalRows * 100
-ratioOfPeopleWhoBought = peopleInsuredWithCaravan/totalRows * 100
-# 5.96% who bought insurance vs 94% who didn't buy the insurance, by statistics it looks like company is in loss people are not interested in buying they have to something to improve.
+# This led us to think about the factors why such a large amount of customers are not Caravan insured vs those who were
 
-dat <- data.frame(
-  policy_status = factor(c("Not Insured","Insured"), levels=c("Not Insured","Insured")),
-  Count = c( peopleNotInsuredWithCaravan , peopleInsuredWithCaravan)
-)
-
-ggplot(data=dat, aes(x=policy_status, y=Count, fill=policy_status)) +
-  geom_bar(colour="red", stat="identity")
-
+# Hence, our research question, to figure out the characteristics of those who have Caravan Insurance
 ```
 
-# Customer Main Type
+# CUSTOMER MAIN TYPE
 ```{r}
 ggplot(df,aes(factor(df$MOSHOOFD))) + 
     geom_bar(aes(fill = factor(df$CARAVAN))) + 
@@ -149,8 +132,7 @@ nrow(df[df$maintype == 10 & df$CARAVAN == 1,])
 # Here we wanted to see the which customer main type has the highest frequency/count of buying the insurance. Based on results, we see that there are atleast 4 main customer categories that buy insurance. However, for our ease and understanding purposes we will only consider the top 2. This brings us to select, category number 8 and 3, where 8 = Family with grown ups and 3 = Driven Growths
 ```
 
-
-# Customer sub type
+# CUSTOMER SUB TYPE
 ```{r}
 ggplot(df,aes(factor(df$MOSTYPE))) + 
     geom_bar(aes(fill = factor(df$CARAVAN))) + 
@@ -168,7 +150,7 @@ nrow(df[df$subtype == 8 & df$CARAVAN == 1,])
 ```
 
 
-# Age
+# AGE
 ```{r}
 ggplot(df,aes(factor(df$MGEMLEEF))) + 
     geom_bar(aes(fill = factor(df$CARAVAN))) + 
@@ -191,7 +173,7 @@ nrow(df[df$age == 6 & df$CARAVAN == 1,])
 ```
 
 
-# No of houses
+# NO. OF HOUSES
 ```{r}
 ggplot(df,aes(factor(df$MAANTHUI))) + 
     geom_bar(aes(fill = factor(df$CARAVAN))) + 
@@ -210,7 +192,7 @@ nrow(df[df$noofhouses == 3 & df$CARAVAN == 1,])
 ```
 
 
-# No of house hold
+# NO. OF HOUSEHOLD
 ```{r}
 ggplot(df,aes(factor(df$MGEMOMV))) + 
     geom_bar(aes(fill = factor(df$CARAVAN))) + 
@@ -225,15 +207,18 @@ nrow(df[df$noofhousehold == 1 & df$CARAVAN == 1,])
 nrow(df[df$noofhousehold == 2 & df$CARAVAN == 1,])
 nrow(df[df$noofhousehold == 3 & df$CARAVAN == 1,])
 df$hasThreeHouseHold = ifelse(df$noofhousehold == 3, 1, 0)
+
 # Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
 ```
+Characteristics we found so far
 
-# Charactertics we found so far
-# Customer having 3 house hold
-# Customer have one house
-# Age of customer is between 40 to 50
-# Customer are Driven Growers
-# Customer belongs to Lower class large families
+*1. Customer having 3 house hold*
+
+*2. Customer have one house, Age of customer is between 40 to 50*
+
+*3. Customer are Driven Growers*
+
+*4. Customer belongs to Lower class large families*
 
 
 # Mod 1 - Correlation Analysis
@@ -241,7 +226,7 @@ df$hasThreeHouseHold = ifelse(df$noofhousehold == 3, 1, 0)
 corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", "CARAVAN")]), method = "number")
 
 
-# From the correlation matrix we have below, we have some interesting insights. The reason to run the correlation matrix was to figure out variables of interest which might cause either overfitting or underfitting. # Here we can see that the variables of interest are positively correlated. One exception to this is the correlation between age and number of households. We see that there is a negative correlation between it. Which actually makes sense because, the greater the age, the no of households will decrease. 
+# From the correlation matrix we have below, we have some interesting insights. The reason to run the correlation matrix was to figure out variables of interest which might cause either over-fitting or under-fitting. # Here we can see that the variables of interest are positively correlated. One exception to this is the correlation between age and number of households. We see that there is a negative correlation between it. Which actually makes sense because, the greater the age, the no of households will decrease. 
 ```
 
 
@@ -253,8 +238,6 @@ cor(df$maintype, df$CARAVAN)
 # we will choose which have high corelation with response variable in this case both are weak correlated doesn't matter what we really choose
 # we will choose maintype
 ```
-
-
 # Categorizing Data
 
 # Number of Houses
@@ -266,7 +249,7 @@ df$OneHouse = ifelse(df$MAANTHUI ==1, 1, 0)
 df$moreThanTwoHouse = ifelse(df$MAANTHUI > 2, 1, 0)
 
 
-# by looking frequencies of houses we categorized houses into dummies.
+# by looking frequencies of houses we categorized houses into dummies. As we already saw from the above bar graph that customers having at least 1 house are likely to buy insurance, we thought it would be a good idea to create dummies in a binary way instead of having many different ranges. That is why we have done this step. 
 ```
 
 # Grouping sub customer to meanful customer type.
@@ -287,8 +270,21 @@ dat <- data.frame(
   Count = c( sum(df$averageFamily), sum(df$loners), sum(df$conservativeFamilies), sum(df$crusingSeniors), sum(df$drivenGrowers), sum(df$grownups), sum(df$framers), sum(df$livingWell), sum(df$retired), sum(df$successful) )
 )
 
-ggplot(data=dat, aes(x=Categorized_Customers, y=Count, fill=Categorized_Customers)) +
-  geom_bar(colour="red", stat="identity")
+plot_ly(dat, x = ~Categorized_Customers, y = ~Count, type = 'bar', color = dat$Categorized_Customers) %>% 
+  layout(title = "<b>Customer Types<b>", legend = list(title = list(text ='<b> Types </b>')))
+
+
+# We have 10 customer main types and 41 customer sub-types. A leveled approach was to consider merging them into one bucket based on sub-category. Since one of our goal is to find the characteristics of customers, we believe that the customer sub-type are the characteristics. However, when we look at customer main type alone, we cannot figure out the characteristics of people in this group. Hence, we merged sub-categories with main categories. 
+
+# An advantage of doing this is that when we look at customer main type, we would automatically know what are the characteristics of this group - explained by the sub types within this group
+
+# After having done so, we constructed a bar chart and observed the following:
+
+#1. Grown-ups are the most popular 
+#2. Followed by Average Family
+#3. Followed by Conservative Families
+
+
 
 ```
 
@@ -353,8 +349,23 @@ df$MINK123M_c = ifelse(df$MINK123M_c == 9, 1 * 123000, df$MINK123M_c)
 
 # Average income
 df$MINKGEM_c = (df$MINK123M_c + df$MINK7512_c + df$MINK4575_c + df$MINK3045_c + df$MINKM30_c)/5
-hist(df$MINKGEM_c, main ="Income in numerical", xlab ="Income")
+#hist(df$MINKGEM_c)
 
+```
+
+```{r}
+plot_ly(x = ~df$MINKGEM_c, type = "histogram", color = df$MINKGEM_c, colors = c("gold", "blue", "green", "pink", "brown")) %>%
+  layout(title = "<b>Income Levels<b>")
+
+# Since our data is categorical and gives us levels, after having discussed with the professor, we agreed that a good approach would be convert the income as a categorical variable to numeric one. 
+
+# In order to do that, we had to decide a method by which we would do so. The method was decided, mapped out in our excel file
+
+# Here we just brought the calculations done in excel
+
+# The idea was to take the average of income for each category
+
+# From the following histogram we can see that most of customers are skewed towards left but we can see in detail as well that most customers are between 5k - 20K
 ```
 
 # Converting age into numerical.
@@ -365,6 +376,12 @@ df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 3, 45, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 55, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 5, 65, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
+
+# Just as we did for income, we did the same thing for age well
+
+# The idea and logic behind it was the same as it was behind converting income to numeric
+
+# We believe that age should be numeric because it is best explained when numeric
 ```
 
 ```{r}
@@ -381,7 +398,7 @@ df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
 ```
 
 
-# Out liers
+# Outliers
 ```{r}
 plot_ly(x = ~df$MINKM30_c, y = ~df$MOSTYPE, type = "box", color = df$MOSTYPE)
 
@@ -399,16 +416,21 @@ plot_ly(x = df$MINK4575_c, y = df$MOSTYPE, type = "box", color = df$MOSTYPE)
 ```
 
 
-# Class Im balance problem
+# Class LM balance problem
 ```{r}
 prop.table(table(df$CARAVAN))
-# 94% people didn't buy insurance and only 5% bought. under sampling problem
 
-barplot(prop.table(table(df$CARAVAN)), col = rainbow(2), ylim = c(0,0.7), main = "Class Distribution")
+# When drew a frequency table, we saw that we have a class imbalance problem as 94% of the records in the CARAVAN column are 0s while only 5% of them are 1s. 
+
+# This is a problem which needs to be solved first before we begin further
 ```
 
+```{r}
+barplot(prop.table(table(df$CARAVAN)), col = rainbow(2), ylim = c(0,1), main = "Class Distribution")
 
-# Partition data
+# Here we have shown how the distribution is happening through a bar chart
+```
+# DATA PARTITION
 
 ```{r}
 # training data
@@ -436,11 +458,13 @@ table(over_train$CARAVAN)
 ```{r}
 over_test = ovun.sample(CARAVAN ~ ., data =df_test, method = "over", N =nrow(df_test))$data
 table(over_test$CARAVAN)
-# we are not fixing sampling problem in test data, i did this becuase i was having error with doing prediction
+# we are not fixing sampling problem in test data, we did this because we were having error with doing prediction
 ```
 
 
 # Convert train data set into factor
+
+*In the followng code, since our entire data is categorical we have converted all of it into factors, for training data*
 ```{r}
 for(i in 1:ncol(over_train)){
 over_train[,i] <- as.factor(over_train[,i])
@@ -449,14 +473,14 @@ over_train[,i] <- as.factor(over_train[,i])
 
 
 # Convert test data set into factor
+*In the followng code, since our entire data is categorical we have converted all of it into factors, for test data as well*
 ```{r}
 for(i in 1:ncol(over_test)){
 over_test[,i] <- as.factor(over_test[,i])
 }
 ```
 
-
-
+*We realized that income should not be as a factor since we converted so we just reconverted back to numeric*
 ```{r}
 over_test$MINKGEM_c = as.numeric(over_test$MINKGEM_c)
 over_train$MINKGEM_c = as.numeric(over_train$MINKGEM_c)
@@ -466,8 +490,6 @@ over_train$MGEMLEEF_c = as.numeric(over_train$MGEMLEEF_c)
 
 ```
 
-
-
 # Draw Confusion matrix function
 
 ```{r}
@@ -475,7 +497,6 @@ drewSummary = function(model) {
   summary(model)
 }
 ```
-
 
 ```{r}
 drewMatrix = function(model, test_data) {
@@ -521,6 +542,7 @@ new_data$OneHouse = as.numeric(new_data$OneHouse)
 
 corrplot(cor(subset(new_data , select = c("MOSHOOFD", "MGEMOMV", "OneHouse", "MINKGEM", "MGEMLEEF", "CARAVAN"))), method = "number", type = "upper")
 ```
+*We have performed a correlation matrix to determine the factors for model one. The variables are those which we have already used above. The correlation matrix tells us which variables are important to least important*
 
 
 # Model 1
@@ -537,8 +559,11 @@ drewROC(logit.reg)
 # getRMSE(logit.reg)
 # drewAnova(logit.reg)
 
-# we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable.
+# we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable
+
 # difference in deviance =  Null deviance (15177) - 14398 = 872
+
+# From the below confusion matrix for model 1 we see that the accuracy of the model is 11% but the sensitivity is 98% while specificity is 57%. There could be couple of cases to either consider or discard the model. If specificity is the goal then this model is a good fit otherwise, it is not. 
 ```
 
 
@@ -559,14 +584,18 @@ new_df[,i] <- as.integer(new_df[,i])
 
 
 # Model 2 | Building model using correlation Analysis
-# Pre processing
+
+*Now we build model number 2 which will also use correlation matrix but this time we want to remove variables that are highly correlated and get those variables which are less correlated hence have a good impact on the response variable and its predictors. We are removing such variables step by step and explaining why are we doing that. *
+
+Pre processing
 ```{r}
 zv = apply(new_df, 2, function(x) length(unique(x)) == 1)
 dfr = new_df[, !zv]
 n=length(colnames(dfr))
 correlationMatrix = cor(dfr[,1:n],use="complete.obs")
 summary(correlationMatrix[upper.tri(correlationMatrix)])
-# After removing our suspected predictors we still have strong positive correlation with 0.98% and strong negative corelation with -0.99%, we need to find which of them are highly correlated
+
+# After removing our suspected predictors we still have strong positive correlation with 1% and strong negative corelation with 99.9%, we need to find which of them are highly correlated
 ```
 
 ```{r}
