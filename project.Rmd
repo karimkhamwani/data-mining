@@ -819,14 +819,13 @@ train_4[,i] <- as.factor(train_4[,i])
 ```{r}
 fit1 = rpart(formula=CARAVAN ~ .,data=over_train,method = 'class', control=rpart.control(minsplit=20, minbucket=1, cp=0.008))
 
-fit1
 
 printcp(fit1)
 
 fancyRpartPlot(fit1)
 
 
-glm_6 = glm(formula = CARAVAN ~  MINKGEM+PBRAND+PPERSAUT, family = binomial(link = "logit"),data = train_4)
+glm_6 = glm(formula = CARAVAN ~ PPERSAUT + MBERHOOG +MGODPR  + MHKOOP +MINKGEM  +MINKM30  +MOSTYPE  +PBRAND   +PBROM, family = binomial(link = "logit"),data = train_4)
 
 
 glm_6$xlevels[["PPERSAUT"]] <- union(glm_6$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
