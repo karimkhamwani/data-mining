@@ -2,7 +2,9 @@
 title: "Final Project"
 author: "Karim and Mustafa"
 date: "10/27/2022"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=TRUE}
@@ -572,7 +574,7 @@ train_2 = over_train
 train_2 = subset(over_train, select = -c(maintype,subtype,age,noofhouses,noofhousehold,hasThreeHouseHold,OneHouse,moreThanTwoHouse,averageFamily,loners,conservativeFamilies,crusingSeniors,drivenGrowers,grownups,framers,livingWell,retired,successful,MINKM30_c,MINK3045_c,MINK4575_c,MINK7512_c,MINK123M_c,MINKGEM_c,MGEMLEEF_c,MOSHOOFD,MGEMOMV,MAANTHUI,MINKGEM,MGEMLEEF) )
 length(train_2)
 ```
-Droping 5 variables that we have used in first regression. and dummies we have created earlier.
+*Dropping 5 variables that we have used in first regression. and dummies we have created earlier.*
 
 
 ```{r}
@@ -602,6 +604,8 @@ summary(correlationMatrix[upper.tri(correlationMatrix)])
 high = findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
 high
 # there are 26 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
+
+# The reason we why we have chose cut-off value of .75 is because it gives us variables that are strongly correlated with each other
 length(high)
 ```
 
@@ -618,7 +622,7 @@ excludedVariables
 
 paste0("excluding total variables from main data set ", length(excludedVariables))
 
-# There are 24 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them.
+# There are 24 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them. These 24 variables are from 26 variables from the above
 ```
 
 
@@ -626,9 +630,13 @@ paste0("excluding total variables from main data set ", length(excludedVariables
 train_2 = data.frame(train_2[, !colnames(train_2) %in% excludedVariables])
 names(train_2)
 length(train_2)
+
 # corrplot(cor(train_3), method = "number")
-# 24 + 5 (predictors in model) = 29
+
+# 24 + 5 (predictors in mode l) = 29
+
 # around 29 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated each other and are significant.
+
 # we have reduce dimension from 86 to 57
 ```
 
@@ -660,6 +668,12 @@ for (i in colnames(new_train_2)){
     cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
 }
 cor_response[order(cor_response$cor_coeff, decreasing = T),]
+
+# options(scipen = 999)
+
+# Here we are seeing the remaining variable's and seeing their significance level with our response variables and all of the variables are significant at .05. 
+
+# Now we will further plot a correlation matrix to make sure there is no co-linearity among the variables with respect to our response variable 
 ```
 
 
@@ -669,14 +683,15 @@ corrplot(cor(subset(new_train_2 , select = c(-CARAVAN))), method = "square", typ
 
 
 ```{r}
-# corelation between Contribution car policies and number of car policies 
+
 cor(df_train$PPERSAUT, df_train$APERSAUT)
-# There is a high correlation between car policies and number of car policies we will exclude a variable which has less correlation with response variable.
-# it's not always necessary to see how much it relates which response variable but it's good as it's tells us how much response variable changes for given predictor.
+
 cor(df_train[ , c("PPERSAUT", "APERSAUT")], df_train[ , "CARAVAN"])
-# Contribution car policies is more correlated with response variable so we exclude Number of car policies
+
 train_2 = data.frame(train_2[ , !colnames(train_2) %in% c("APERSAUT")])
 paste0("after removing APERSAUT dimension is", length(train_2))
+
+# There is a high correlation between car policies and number of car policies which we will exclude as variables which have less correlation with response variable. It's not always necessary to see how much it relates which response variable but it's good as if it tells us how much response variable changes for given predictor. Contribution car policies is more correlated with response variable so we exclude Number of car policies
 ```
 
 
@@ -684,16 +699,20 @@ paste0("after removing APERSAUT dimension is", length(train_2))
 # final variable selected
 names(train_2)
 length(train_2)
+
+# After having removed all the variables which are highly correlated with each other we are left with 56 variables of importance 
 ```
 
 
 ```{r}
 step.wise1 = glm(CARAVAN ~ ., data = train_2, family = binomial(link = "logit"))
-#summary(step.wise1)
+summary(step.wise1)
 # difference between null deviance. = 15177 - 12386 = 2791
 # step(step.wise1, direction = "backwards")
-```
 
+# Here we have applied GLM to our 56 variables, because it must be remembered that our dataset is categorical in nature. 
+```
+*After having run the regression we have see that most of the variables are significant. This means that the dimension reduction we took earlier is helping us to come up with a good model*
 
 ```{r}
 
@@ -701,6 +720,9 @@ step.wise1 = glm(CARAVAN ~ ., data = train_2, family = binomial(link = "logit"))
 # null deviance = 15177 - 12394 = 2783
 ```
 
+*Now we went one step further and applied a step-wise backwards regression which further helped us reduce variables*
+
+*In the next step we will take the 41 variables which we got from step-wise*
 
 ```{r}
 for(i in 1:ncol(train_2)){
@@ -741,12 +763,18 @@ drewMatrix(model.2, over_test)
 # Sensitivity : 64%
 # Accuracy : 54%
 ```
-# explanation
+As we have seen that most of the variables are significant, let's say MGODRK1 is increased by 1 unit then we can say that the customer is likely to buy caravan insurance. The likelihood of buying insurance is .34. 
 
+Applying the GLM from the step-wise model(backwards), we see we have produced a good model. The reason as to why we consider it as an improved model is because we have relatively improved our accuracy and also reduced our variables. Now if we want to further improve our model, we can change our cut-off value to get better results, which in turn will increase specificity. Although the classifications is 0.46 but an average the model is producing good results. 
 
 # Model 3 with Domain knowledge
+
+Now will create another model which would be our 3rd model. This model is based on our domain knowledge which we have collected by reading a few articles and deciding the factors that play the most important role in determining whether the customer will buy an insurance or not. We spent a good amount of time adding and removing variables to come up with this model, which we assume would be a better one. To make sure it is, we have verified it as well. 
+
 ```{r}
 corrplot(cor(subset(df_train , select = c("PBRAND", "MOSTYPE", "PPERSAUT", "MKOOPKLA", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
+
+# Simply put, we ran a corerelation matrix among the variables of interest based on our domain knowledge and achieved the following matrix:
 ```
 
 ```{r}
@@ -777,16 +805,16 @@ plot(perf) > auc(over_test$CARAVAN,predictedClass_3)
 
 auc_ROCR <- performance(pr, measure = "auc")
 auc_ROCR <- auc_ROCR@y.values[[1]]
-auc_ROCR
+
 
 pR2(model.3)['McFadden']
 # difference in deviance =  Null deviance (15177) - 12051 = 3025
 # sensivity 72%
 # Accuracy : 60%
 ```
-Explanation
-AUC roc plot logistic regression Our AUC score is 0.7176653
+For this model, we created a confusion matrix along with ROC. We see that the accuracy is approximately 60%, while sensitivity is also 60% and specificity is roughly 60% as well. 
 
+AUC ROC plot logistic regression Our AUC score is 0.59. This means that, we are relatively closer to 1 and we know that the closer we are to 1 the better. 
 
 # Evaluting performance of model 3
 ```{r}
@@ -798,11 +826,13 @@ boxplot(pred_t)
 resid.t<-residuals(model.3)
 hist(resid.t)
 ```
+From the above histogram we can see the range of our residuals is between -2 and 2.
 
 # ROC Model 3
 ```{r}
 drewROC(model.3)
 ```
+From the above ROC curve we can see that if we compare it with the previous ROC the area we have achieved a higher area under the curve with respect tot the ROC. 
 
 # Lift chart
 ```{r}
@@ -820,6 +850,7 @@ gain = gains(actual, predicted_3_num)
 barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentile", ylab = "Mean Response", main = "Decile-wise lift chart")
 
 ```
+Since our data is categorical, we need to assess the predictive performance our models. One method to do so is by looking at the Decile-Wise chart. The idea behind Decide wise chart is that it divides the data into 10 bins. Each bin tells us the % by which the model is able to explain the predictive performance. It must also be kept in mind that a good decile was chart is sort of downward slopping from left to right. As we can see in this chart, that we achieved, somewhat a similar thing. The predictive performance of our models is good because at each bin we touch about 1% of the probability. 
 
 ```{r}
 train_4 = over_train
@@ -829,7 +860,7 @@ train_4[,i] <- as.factor(train_4[,i])
 ```
 
 
-# Decision tree.
+# Model 4 - Decision tree.
 ```{r}
 fit1 = rpart(formula=CARAVAN ~ .,data=over_train,method = 'class', control=rpart.control(minsplit=20, minbucket=1, cp=0.008))
 
@@ -858,8 +889,12 @@ accuracy(predictedClass_6, as.numeric(over_test$CARAVAN))
 pR2(glm_6)['McFadden']
 # difference in deviance =  Null deviance (15177) - 12069 = 3108
 # Accuracy 68%
-# Sensitivity 69%
+# Sensitivity 58%
 ```
+Now we ran another model based on decision tree. The good thing about decision tree is that it gives us variables of most importance having a a greater impact on our response variable. From the decision tree we are able to see that 5 variables are of most importance. The above model is ran at cut-off .5 and we achieved an accuracy of 68%, sensitivity of 58% and specificity of 68%. 
+
+However, we ran the model with cut-off at .4 as well. We observed that while accuracy decreased, specificity increased. 
+
 
 # ROC model 4
 ```{r}
