@@ -59,6 +59,9 @@ library(rlist)
 library(pROC)
 library(ROSE)
 library(plotly)
+library(rattle)
+library(rpart.plot)
+library(RColorBrewer)
 ```
 
 LOADING/READ FILE
@@ -433,7 +436,7 @@ barplot(prop.table(table(df$CARAVAN)), col = rainbow(2), ylim = c(0,1), main = "
 # training data
 df_train = (df[df$ORIGIN == "train",])
 df_train = (df_train[,-1])
-nrow(df_train)
+table(df_train$CARAVAN)
 ```
 
 
@@ -446,7 +449,7 @@ table(df_test$CARAVAN)
 ```
 
 
-
+# Solving class imbalance problem
 ```{r}
 over_train = ovun.sample(CARAVAN ~ ., data =df_train, method = "over", N =10948)$data
 table(over_train$CARAVAN)
@@ -553,6 +556,7 @@ logit.reg$xlevels[["MGEMOMV"]] <- union(logit.reg$xlevels[["MGEMOMV"]], levels(o
 drewSummary(logit.reg)
 drewMatrix(logit.reg, over_test)
 drewROC(logit.reg)
+# getRMSE(logit.reg)
 # drewAnova(logit.reg)
 
 # we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable
@@ -562,21 +566,33 @@ drewROC(logit.reg)
 # From the below confusion matrix for model 1 we see that the accuracy of the model is 11% but the sensitivity is 98% while specificity is 57%. There could be couple of cases to either consider or discard the model. If specificity is the goal then this model is a good fit otherwise, it is not. 
 ```
 
+
+```{r}
+train_2 = over_train
+train_2 = subset(over_train, select = -c(maintype,subtype,age,noofhouses,noofhousehold,hasThreeHouseHold,OneHouse,moreThanTwoHouse,averageFamily,loners,conservativeFamilies,crusingSeniors,drivenGrowers,grownups,framers,livingWell,retired,successful,MINKM30_c,MINK3045_c,MINK4575_c,MINK7512_c,MINK123M_c,MINKGEM_c,MGEMLEEF_c,MOSHOOFD,MGEMOMV,MAANTHUI,MINKGEM,MGEMLEEF) )
+length(train_2)
+```
+Droping 5 variables that we have used in first regression. and dummies we have created earlier.
+
+
+```{r}
+new_df  = train_2
+for(i in 1:ncol(new_df)){
+new_df[,i] <- as.integer(new_df[,i])
+}
+```
+
+
 # Model 2 | Building model using correlation Analysis
 
 *Now we build model number 2 which will also use correlation matrix but this time we want to remove variables that are highly correlated and get those variables which are less correlated hence have a good impact on the response variable and its predictors. We are removing such variables step by step and explaining why are we doing that. *
 
 Pre processing
 ```{r}
-
-train_2 = over_train
-
-new_df  = data.frame(df_train[, -c(2,3,4,5)])
 zv = apply(new_df, 2, function(x) length(unique(x)) == 1)
 dfr = new_df[, !zv]
 n=length(colnames(dfr))
 correlationMatrix = cor(dfr[,1:n],use="complete.obs")
-
 summary(correlationMatrix[upper.tri(correlationMatrix)])
 
 # After removing our suspected predictors we still have strong positive correlation with 1% and strong negative corelation with 99.9%, we need to find which of them are highly correlated
@@ -585,7 +601,8 @@ summary(correlationMatrix[upper.tri(correlationMatrix)])
 ```{r}
 high = findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
 high
-# there are 34 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
+# there are 26 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
+length(high)
 ```
 
 
@@ -593,23 +610,26 @@ high
 target_cor_df = data.frame(CARAVAN = cor(df_train[,sort(high)], df_train[, "CARAVAN"]))
 
 
+
 cor_df = target_cor_df[order(target_cor_df$CARAVAN,decreasing = T),,drop=F]
 
 excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
+excludedVariables
 
-excludedDummiesAndVariables = list.append(excludedVariables, 'maintype', 'age', 'noofhouses','hasThreeHouseHold', 'moreThanTwoHouse', 'averageFamily', 'loners', 'conservativeFamilies', 'crusingSeniors', 'drivenGrowers', 'grownups', 'framers','livingWell', 'retired', 'successful','MINK7512_c', 'MINK123M_c', 'MGEMLEEF_c')
+paste0("excluding total variables from main data set ", length(excludedVariables))
 
-excludedDummiesAndVariables
-# There are 33 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them.
+# There are 24 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them.
 ```
 
 
 ```{r}
-train_2 = data.frame(train_2[, !colnames(train_2) %in% excludedDummiesAndVariables])
+train_2 = data.frame(train_2[, !colnames(train_2) %in% excludedVariables])
 names(train_2)
+length(train_2)
 # corrplot(cor(train_3), method = "number")
-# 33 + 4 + 1 (carvan) = 38
-# around 37 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated each other and are significant.
+# 24 + 5 (predictors in model) = 29
+# around 29 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated each other and are significant.
+# we have reduce dimension from 86 to 57
 ```
 
 
@@ -644,7 +664,7 @@ cor_response[order(cor_response$cor_coeff, decreasing = T),]
 
 
 ```{r}
-corrplot(cor(subset(df_train , select = c(-CARAVAN))), method = "square", type = "upper")
+corrplot(cor(subset(new_train_2 , select = c(-CARAVAN))), method = "square", type = "upper")
 ```
 
 
@@ -656,46 +676,72 @@ cor(df_train$PPERSAUT, df_train$APERSAUT)
 cor(df_train[ , c("PPERSAUT", "APERSAUT")], df_train[ , "CARAVAN"])
 # Contribution car policies is more correlated with response variable so we exclude Number of car policies
 train_2 = data.frame(train_2[ , !colnames(train_2) %in% c("APERSAUT")])
+paste0("after removing APERSAUT dimension is", length(train_2))
+```
+
+
+```{r}
+# final variable selected
+names(train_2)
+length(train_2)
 ```
 
 
 ```{r}
 step.wise1 = glm(CARAVAN ~ ., data = train_2, family = binomial(link = "logit"))
-summary(step.wise1)
-#step(step.wise1, direction = "forward")
+#summary(step.wise1)
+# difference between null deviance. = 15177 - 12386 = 2791
+# step(step.wise1, direction = "backwards")
 ```
 
 
 ```{r}
-# MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
-#     MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFALLEEN + 
-#     MFGEKIND + MFWEKIND + MOPLHOOG + MOPLMIDD + MOPLLAAG + MBERHOOG + 
-#     MBERZELF + MBERBOER + MBERMIDD + MBERARBG + MBERARBO + MSKA + 
-#     MSKB1 + MSKB2 + MSKC + MHHUUR + MAUT1 + MAUT2 + MAUT0 + 
-#     MZFONDS + MINKM30 + MINK3045 + MINK4575 + MINKGEM + MKOOPKLA + 
-#     PWALAND + PPERSAUT + PBESAUT + PBROM + PZEILPL + PFIETS + 
-#     PINBOED + AWAPART + AWABEDR + AMOTSCO + AVRAAUT + AAANHANG + 
-#     ATRACTOR + AWERKT + ALEVEN + APERSONG + AGEZONG + AWAOREG + 
-#     ABRAND + APLEZIER + ABYSTAND
 
-# List of variables suggested by stepwise foward by most to least siginificat we will pick first few and run the model so we avoid over fitting model
+# after running backward dimension has reduce to from 56 to 41 variables
+# null deviance = 15177 - 12394 = 2783
+```
+
+
+```{r}
+for(i in 1:ncol(train_2)){
+train_2[,i] <- as.factor(train_2[,i])
+}
 ```
 
 
 # Model 2
 ```{r}
-model.2 = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
-    MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFWEKIND + MOPLMIDD, family = binomial(link = "logit"), data = train_2)
+# model.2 = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
+#     MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFWEKIND + MOPLMIDD, family = binomial(link = "logit"), data = train_2)
 
-model.2$xlevels[["MGEMOMV"]] <- union(model.2$xlevels[["MGEMOMV"]], levels(over_test$MGEMOMV))
+
+model.2 = glm(formula = CARAVAN ~ MOSTYPE + MGODRK + MGODPR + MGODOV + 
+    MRELGE + MRELSA + MOPLMIDD + MOPLLAAG + MBERHOOG + MBERZELF + 
+    MBERBOER + MBERMIDD + MBERARBG + MBERARBO + MSKC + MSKD + 
+    MHKOOP + MAUT1 + MAUT2 + MAUT0 + MINK3045 + MINK7512 + MINK123M + 
+    MKOOPKLA + PPERSAUT + PMOTSCO + PVRAAUT + PAANHANG + PWERKT + 
+    PWAOREG + PPLEZIER + AWAPART + AWALAND + ABROM + ALEVEN + 
+    APERSONG + AGEZONG + ABRAND + APLEZIER + AFIETS + ABYSTAND, 
+    family = binomial(link = "logit"), data = over_train)
+
+model.2$xlevels[["MSKD"]] <- union(model.2$xlevels[["MSKD"]], levels(over_test$MSKD))
+model.2$xlevels[["MAUT2"]] <- union(model.2$xlevels[["MAUT2"]], levels(over_test$MAUT2))
+model.2$xlevels[["MINK123M"]] <- union(model.2$xlevels[["MINK123M"]], levels(over_test$MINK123M))
+model.2$xlevels[["PPERSAUT"]] <- union(model.2$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
+model.2$xlevels[["PVRAAUT"]] <- union(model.2$xlevels[["PVRAAUT"]], levels(over_test$PVRAAUT))
+model.2$xlevels[["PWERKT"]] <- union(model.2$xlevels[["PWERKT"]], levels(over_test$PWERKT))
+model.2$xlevels[["ABROM"]] <- union(model.2$xlevels[["ABROM"]], levels(over_test$ABROM))
+model.2$xlevels[["ALEVEN"]] <- union(model.2$xlevels[["ALEVEN"]], levels(over_test$ALEVEN))
+model.2$xlevels[["ABRAND"]] <- union(model.2$xlevels[["ABRAND"]], levels(over_test$ABRAND))
+model.2$xlevels[["AFIETS"]] <- union(model.2$xlevels[["AFIETS"]], levels(over_test$AFIETS))
 
 drewSummary(model.2)
 drewMatrix(model.2, over_test)
-# difference in deviance =  Null deviance (15177) - 13808 = 1369
+# difference in deviance =  Null deviance (15177.2) - 9766.3 = 5411
+# Sensitivity : 64%
+# Accuracy : 54%
 ```
 # explanation
-
-# when removing MBERMIDD (middle management) from predictors Sensitivity jump from 45 to 51 while Accuracy is constant 0.62
 
 
 # Model 3 with Domain knowledge
@@ -704,8 +750,16 @@ corrplot(cor(subset(df_train , select = c("PBRAND", "MOSTYPE", "PPERSAUT", "MKOO
 ```
 
 ```{r}
+train_3 = over_train
+for(i in 1:ncol(train_3)){
+train_3[,i] <- as.factor(train_3[,i])
+}
+```
+
+
+```{r}
 model.3 = glm(formula = CARAVAN ~ PBRAND + MOSTYPE + PPERSAUT + MKOOPKLA+MHKOOP, family = binomial(link = "logit"), 
-    data = over_train)
+    data = train_3)
 
 model.3$xlevels[["PPERSAUT"]] <- union(model.3$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
 
@@ -726,7 +780,9 @@ auc_ROCR <- auc_ROCR@y.values[[1]]
 auc_ROCR
 
 pR2(model.3)['McFadden']
-# difference in deviance =  Null deviance (15177) - 12152 = 3025
+# difference in deviance =  Null deviance (15177) - 12051 = 3025
+# sensivity 72%
+# Accuracy : 60%
 ```
 Explanation
 AUC roc plot logistic regression Our AUC score is 0.7176653
@@ -765,22 +821,26 @@ barplot(gain$mean.resp / mean(actual), names.arg = gain$depth, xlab = "Percentil
 
 ```
 
-
 ```{r}
-library(rattle)
-library(rpart.plot)
-#library(RColorBrewer)
+train_4 = over_train
+for(i in 1:ncol(train_4)){
+train_4[,i] <- as.factor(train_4[,i])
+}
 ```
 
 
 # Decision tree.
 ```{r}
-fit1 <- rpart(formula=CARAVAN ~ .,data=over_train,method = 'class', control=rpart.control(minsplit=20, minbucket=1, cp=0.008))
+fit1 = rpart(formula=CARAVAN ~ .,data=over_train,method = 'class', control=rpart.control(minsplit=20, minbucket=1, cp=0.008))
+
+fit1
+
+printcp(fit1)
 
 fancyRpartPlot(fit1)
 
 
-glm_6 = glm(formula = CARAVAN ~  PPERSAUT+MOSTYPE+PBRAND+MBERHOOG+MBERMIDD, family = binomial(link = "logit"),data = over_train)
+glm_6 = glm(formula = CARAVAN ~  MINKGEM+PBRAND+PPERSAUT, family = binomial(link = "logit"),data = train_4)
 
 
 glm_6$xlevels[["PPERSAUT"]] <- union(glm_6$xlevels[["PPERSAUT"]], levels(over_test$PPERSAUT))
@@ -797,6 +857,8 @@ accuracy(predictedClass_6, as.numeric(over_test$CARAVAN))
 
 pR2(glm_6)['McFadden']
 # difference in deviance =  Null deviance (15177) - 12069 = 3108
+# Accuracy 68%
+# Sensitivity 69%
 ```
 
 # ROC model 4
@@ -805,9 +867,15 @@ drewROC(glm_6)
 ```
 
 
-# Model comparsion using anova test
+# Model 1 and 2 comparison 
 ```{r}
-anova(logit.reg,model.2,model.3,glm_6,test = 'Chisq')
+anova(logit.reg,model.2,test = 'Chisq')
+```
+
+
+# Model 3 and 4 comparison
+```{r}
+anova(model.3,glm_6,test = 'Chisq')
 ```
 
 
