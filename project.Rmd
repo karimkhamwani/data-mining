@@ -3,8 +3,8 @@ title: "Final Project"
 author: "Karim and Mustafa"
 date: "10/27/2022"
 output:
-  pdf_document: default
   html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=TRUE}
@@ -82,16 +82,15 @@ Total number of variables are 86 ignoring the 1st column which is meaningless fo
 # DESCRIPTIVE ANALYSIS
 ```{r}
 skim(df)
-
-# There are no missing values in our data or NANs [Not A Number]
 ```
+There are no missing values in our data or NANs [Not A Number]
+
 # PLOTTING GRAPHS
 ```{r}
 Uninsured =length(which(df$CARAVAN == 0))
 Insured = length(which(df$CARAVAN == 1))
-
-# We use this function to find out the total count of rows where customers were either insured = 1 or uninsured = 0 for Caravan Insurance Only
 ```
+We use this function to find out the total count of rows where customers were either insured = 1 or uninsured = 0 for Caravan Insurance Only
 
 ```{r}
 frame = data.frame(Policy_Status = factor(c("Uninsured","Insured"), levels=c("Uninsured","Insured")), Count = c(Uninsured,Insured))
@@ -100,15 +99,11 @@ frame = data.frame(Policy_Status = factor(c("Uninsured","Insured"), levels=c("Un
 ```{r}
 plot_ly(frame, x = ~Policy_Status, y = ~Count, type = "bar", color = frame$Policy_Status, colors = c("Purple", "Gold")) %>% 
   layout(title = "<b>Insuraned vs Uninsured<b>", legend = list(title = list(text ='<b> Policy Status </b>')))
-
-# From the below graph we mapped those who were insured for Caravan insurance against those who were not. 
-
-# We see that the count of Uninsured = 9236 vs Insured = 586
-
-# This led us to think about the factors why such a large amount of customers are not Caravan insured vs those who were
-
-# Hence, our research question, to figure out the characteristics of those who have Caravan Insurance
 ```
+From the below graph we mapped those who were insured for Caravan insurance against those who were not. 
+We see that the count of Uninsured = 9236 vs Insured = 586
+This led us to think about the factors why such a large amount of customers are not Caravan insured vs those who were
+Hence, our research question, to figure out the characteristics of those who have Caravan Insurance
 
 # CUSTOMER MAIN TYPE
 ```{r}
@@ -130,9 +125,8 @@ nrow(df[df$maintype == 7 & df$CARAVAN == 1,])
 nrow(df[df$maintype == 8 & df$CARAVAN == 1,])
 nrow(df[df$maintype == 9 & df$CARAVAN == 1,])
 nrow(df[df$maintype == 10 & df$CARAVAN == 1,])
-
-# Here we wanted to see the which customer main type has the highest frequency/count of buying the insurance. Based on results, we see that there are atleast 4 main customer categories that buy insurance. However, for our ease and understanding purposes we will only consider the top 2. This brings us to select, category number 8 and 3, where 8 = Family with grown ups and 3 = Driven Growths
 ```
+Here we wanted to see the which customer main type has the highest frequency/count of buying the insurance. Based on results, we see that there are atleast 4 main customer categories that buy insurance. However, for our ease and understanding purposes we will only consider the top 2. This brings us to select, category number 8 and 3, where 8 = Family with grown ups and 3 = Driven Growths
 
 # CUSTOMER SUB TYPE
 ```{r}
@@ -146,10 +140,8 @@ ggplot(df,aes(factor(df$MOSTYPE))) +
 df$subtype = df$MOSTYPE
 nrow(df[df$subtype == 33 & df$CARAVAN == 1,])
 nrow(df[df$subtype == 8 & df$CARAVAN == 1,])
-
-# category 33 and 8 purchased more policies.
-# Based on our main category which compromises of various sub-categories, we can see that sub-categories number 33 and 8 are porne to buying insurance. These should be considered as the characteristics/attributes of the types of customers that exist in the main customer category. hence, we could say that, those who are middle class and those who are low class but have large families have a higher chance of getting the insurance 
 ```
+category 33 and 8 purchased more policies. Based on our main category which compromises of various sub-categories, we can see that sub-categories number 33 and 8 are porne to buying insurance. These should be considered as the characteristics/attributes of the types of customers that exist in the main customer category. hence, we could say that, those who are middle class and those who are low class but have large families have a higher chance of getting the insurance 
 
 
 # AGE
@@ -169,10 +161,8 @@ nrow(df[df$age == 3 & df$CARAVAN == 1,])
 nrow(df[df$age == 4 & df$CARAVAN == 1,])
 nrow(df[df$age == 5 & df$CARAVAN == 1,])
 nrow(df[df$age == 6 & df$CARAVAN == 1,])
-
-# Here we have explored to see what is the age range of the customers that buy the insurance. Based on our analysis we see that customers who are between the ages 40-50 are prone to buying insurance compared with others. Hence, we could say that it is among the many characteristics of the main customer group [3,8]
-
 ```
+Here we have explored to see what is the age range of the customers that buy the insurance. Based on our analysis we see that customers who are between the ages 40-50 are prone to buying insurance compared with others. Hence, we could say that it is among the many characteristics of the main customer group [3,8]
 
 
 # NO. OF HOUSES
@@ -189,10 +179,8 @@ df$noofhouses = df$MAANTHUI
 nrow(df[df$noofhouses == 1 & df$CARAVAN == 1,])
 nrow(df[df$noofhouses == 2 & df$CARAVAN == 1,])
 nrow(df[df$noofhouses == 3 & df$CARAVAN == 1,])
-
-# Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
 ```
-
+Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
 
 # NO. OF HOUSEHOLD
 ```{r}
@@ -209,9 +197,10 @@ nrow(df[df$noofhousehold == 1 & df$CARAVAN == 1,])
 nrow(df[df$noofhousehold == 2 & df$CARAVAN == 1,])
 nrow(df[df$noofhousehold == 3 & df$CARAVAN == 1,])
 df$hasThreeHouseHold = ifelse(df$noofhousehold == 3, 1, 0)
-
-# Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
 ```
+Now we wanted to see who is prone to getting an insurance with respect to number of houses and we have found that customers having at least 1 house are likely to get the insurance.
+
+
 Characteristics we found so far
 
 *1. Customer having 3 house hold*
@@ -226,10 +215,8 @@ Characteristics we found so far
 # Mod 1 - Correlation Analysis
 ```{r}
 corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", "CARAVAN")]), method = "number")
-
-
-# From the correlation matrix we have below, we have some interesting insights. The reason to run the correlation matrix was to figure out variables of interest which might cause either over-fitting or under-fitting. # Here we can see that the variables of interest are positively correlated. One exception to this is the correlation between age and number of households. We see that there is a negative correlation between it. Which actually makes sense because, the greater the age, the no of households will decrease. 
 ```
+From the correlation matrix we have below, we have some interesting insights. The reason to run the correlation matrix was to figure out variables of interest which might cause either over-fitting or under-fitting. # Here we can see that the variables of interest are positively correlated. One exception to this is the correlation between age and number of households. We see that there is a negative correlation between it. Which actually makes sense because, the greater the age, the no of households will decrease. 
 
 
 # Which varaible to select when they are highly postive correlated?
@@ -237,11 +224,10 @@ corrplot(cor(df[, c("subtype","maintype", "age", "noofhouses", "noofhousehold", 
 ```{r}
 cor(df$subtype, df$CARAVAN)
 cor(df$maintype, df$CARAVAN)
-# we will choose which have high corelation with response variable in this case both are weak correlated doesn't matter what we really choose
-# we will choose maintype
 ```
-# Categorizing Data
+we will choose which have high corelation with response variable in this case both are weak correlated doesn't matter what we really choose. we will choose maintype
 
+# Categorizing Data
 # Number of Houses
 ```{r}
 table(df$MAANTHUI)
@@ -249,10 +235,8 @@ table(df$MAANTHUI)
 df$MAANTHUI = replace(df$MAANTHUI, df$MAANTHUI > 2, 2)
 df$OneHouse = ifelse(df$MAANTHUI ==1, 1, 0)
 df$moreThanTwoHouse = ifelse(df$MAANTHUI > 2, 1, 0)
-
-
-# by looking frequencies of houses we categorized houses into dummies. As we already saw from the above bar graph that customers having at least 1 house are likely to buy insurance, we thought it would be a good idea to create dummies in a binary way instead of having many different ranges. That is why we have done this step. 
 ```
+by looking frequencies of houses we categorized houses into dummies. As we already saw from the above bar graph that customers having at least 1 house are likely to buy insurance, we thought it would be a good idea to create dummies in a binary way instead of having many different ranges. That is why we have done this step. 
 
 # Grouping sub customer to meanful customer type.
 ```{r}
@@ -274,21 +258,17 @@ dat <- data.frame(
 
 plot_ly(dat, x = ~Categorized_Customers, y = ~Count, type = 'bar', color = dat$Categorized_Customers) %>% 
   layout(title = "<b>Customer Types<b>", legend = list(title = list(text ='<b> Types </b>')))
-
-
-# We have 10 customer main types and 41 customer sub-types. A leveled approach was to consider merging them into one bucket based on sub-category. Since one of our goal is to find the characteristics of customers, we believe that the customer sub-type are the characteristics. However, when we look at customer main type alone, we cannot figure out the characteristics of people in this group. Hence, we merged sub-categories with main categories. 
-
-# An advantage of doing this is that when we look at customer main type, we would automatically know what are the characteristics of this group - explained by the sub types within this group
-
-# After having done so, we constructed a bar chart and observed the following:
-
-#1. Grown-ups are the most popular 
-#2. Followed by Average Family
-#3. Followed by Conservative Families
-
-
-
 ```
+We have 10 customer main types and 41 customer sub-types. A leveled approach was to consider merging them into one bucket based on sub-category. Since one of our goal is to find the characteristics of customers, we believe that the customer sub-type are the characteristics. However, when we look at customer main type alone, we cannot figure out the characteristics of people in this group. Hence, we merged sub-categories with main categories. 
+
+An advantage of doing this is that when we look at customer main type, we would automatically know what are the characteristics of this group - explained by the sub types within this group
+
+After having done so, we constructed a bar chart and observed the following:
+
+1. Grown-ups are the most popular 
+2. Followed by Average Family
+3. Followed by Conservative Families
+
 
 
 # Income Conversion
@@ -351,24 +331,21 @@ df$MINK123M_c = ifelse(df$MINK123M_c == 9, 1 * 123000, df$MINK123M_c)
 
 # Average income
 df$MINKGEM_c = (df$MINK123M_c + df$MINK7512_c + df$MINK4575_c + df$MINK3045_c + df$MINKM30_c)/5
-#hist(df$MINKGEM_c)
-
 ```
 
 ```{r}
 plot_ly(x = ~df$MINKGEM_c, type = "histogram", color = df$MINKGEM_c, colors = c("gold", "blue", "green", "pink", "brown")) %>%
   layout(title = "<b>Income Levels<b>")
-
-# Since our data is categorical and gives us levels, after having discussed with the professor, we agreed that a good approach would be convert the income as a categorical variable to numeric one. 
-
-# In order to do that, we had to decide a method by which we would do so. The method was decided, mapped out in our excel file
-
-# Here we just brought the calculations done in excel
-
-# The idea was to take the average of income for each category
-
-# From the following histogram we can see that most of customers are skewed towards left but we can see in detail as well that most customers are between 5k - 20K
 ```
+- Since our data is categorical and gives us levels, after having discussed with the professor, we agreed that a good approach would be convert the income as a categorical variable to numeric one. 
+
+- In order to do that, we had to decide a method by which we would do so. The method was decided, mapped out in our excel file
+
+- Here we just brought the calculations done in excel
+
+- The idea was to take the average of income for each category
+
+- From the following histogram we can see that most of customers are skewed towards left but we can see in detail as well that most customers are between 5k - 20K
 
 # Converting age into numerical.
 ```{r}
@@ -378,13 +355,13 @@ df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 3, 45, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 55, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 5, 65, df$MGEMLEEF_c)
 df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
-
-# Just as we did for income, we did the same thing for age well
-
-# The idea and logic behind it was the same as it was behind converting income to numeric
-
-# We believe that age should be numeric because it is best explained when numeric
 ```
+- Just as we did for income, we did the same thing for age well
+
+- The idea and logic behind it was the same as it was behind converting income to numeric
+
+- We believe that age should be numeric because it is best explained when numeric
+
 
 ```{r}
 # MOSTYPE : customer subtype
@@ -403,11 +380,10 @@ df$MGEMLEEF_c = ifelse(df$MGEMLEEF_c == 4, 75, df$MGEMLEEF_c)
 # Outliers
 ```{r}
 plot_ly(x = ~df$MINKM30_c, y = ~df$MOSTYPE, type = "box", color = df$MOSTYPE)
-
-# After having converted the categorical variable for income to numerical, here we take income less than 3000 against customer sub-categories and draw a box plot. From the below box plot, we can see that as soon as income crosses 10K, we begint to see a few outliers for certain sub-categories. Another important thing to note is that when income jumps above 20K, the distance of outliers starts to increase. We could say that we are seeing extreme outliers in income levels ranging from 25K to 30K. 
-
-# Now the question is if we should keep outliers in our analysis, whether mild or extreme or delete both of them and then proceed?
 ```
+After having converted the categorical variable for income to numerical, here we take income less than 3000 against customer sub-categories and draw a box plot. From the below box plot, we can see that as soon as income crosses 10K, we begint to see a few outliers for certain sub-categories. Another important thing to note is that when income jumps above 20K, the distance of outliers starts to increase. We could say that we are seeing extreme outliers in income levels ranging from 25K to 30K. 
+
+Now the question is if we should keep outliers in our analysis, whether mild or extreme or delete both of them and then proceed?
 
 ```{r}
 plot_ly(y = ~df$MOSTYPE, x = ~df$MINK3045_c, type = "box", color = df$MOSTYPE)
@@ -421,17 +397,16 @@ plot_ly(x = df$MINK4575_c, y = df$MOSTYPE, type = "box", color = df$MOSTYPE)
 # Class LM balance problem
 ```{r}
 prop.table(table(df$CARAVAN))
-
-# When drew a frequency table, we saw that we have a class imbalance problem as 94% of the records in the CARAVAN column are 0s while only 5% of them are 1s. 
-
-# This is a problem which needs to be solved first before we begin further
 ```
+When drew a frequency table, we saw that we have a class imbalance problem as 94% of the records in the CARAVAN column are 0s while only 5% of them are 1s. 
+This is a problem which needs to be solved first before we begin further
+
 
 ```{r}
 barplot(prop.table(table(df$CARAVAN)), col = rainbow(2), ylim = c(0,1), main = "Class Distribution")
-
-# Here we have shown how the distribution is happening through a bar chart
 ```
+Here we have shown how the distribution is happening through a bar chart
+
 # DATA PARTITION
 
 ```{r}
@@ -440,7 +415,6 @@ df_train = (df[df$ORIGIN == "train",])
 df_train = (df_train[,-1])
 table(df_train$CARAVAN)
 ```
-
 
 ```{r}
 #testing data
@@ -460,29 +434,28 @@ table(over_train$CARAVAN)
 ```{r}
 over_test = ovun.sample(CARAVAN ~ ., data =df_test, method = "over", N =nrow(df_test))$data
 table(over_test$CARAVAN)
-# we are not fixing sampling problem in test data, we did this because we were having error with doing prediction
 ```
+we are not fixing sampling problem in test data, we did this because we were having error while doing prediction
 
 
 # Convert train data set into factor
-
-*In the followng code, since our entire data is categorical we have converted all of it into factors, for training data*
 ```{r}
 for(i in 1:ncol(over_train)){
 over_train[,i] <- as.factor(over_train[,i])
 }
 ```
+In the followng code, since our entire data is categorical we have converted all of it into factors, for training data
 
 
 # Convert test data set into factor
-*In the followng code, since our entire data is categorical we have converted all of it into factors, for test data as well*
 ```{r}
 for(i in 1:ncol(over_test)){
 over_test[,i] <- as.factor(over_test[,i])
 }
 ```
+In the followng code, since our entire data is categorical we have converted all of it into factors, for test data as well
 
-*We realized that income should not be as a factor since we converted so we just reconverted back to numeric*
+
 ```{r}
 over_test$MINKGEM_c = as.numeric(over_test$MINKGEM_c)
 over_train$MINKGEM_c = as.numeric(over_train$MINKGEM_c)
@@ -491,6 +464,7 @@ over_test$MGEMLEEF_c = as.numeric(over_test$MGEMLEEF_c)
 over_train$MGEMLEEF_c = as.numeric(over_train$MGEMLEEF_c)
 
 ```
+We realized that income should not be as a factor since we converted so we just reconverted back to numeric
 
 # Draw Confusion matrix function
 
@@ -544,7 +518,7 @@ new_data$OneHouse = as.numeric(new_data$OneHouse)
 
 corrplot(cor(subset(new_data , select = c("MOSHOOFD", "MGEMOMV", "OneHouse", "MINKGEM", "MGEMLEEF", "CARAVAN"))), method = "number", type = "upper")
 ```
-*We have performed a correlation matrix to determine the factors for model one. The variables are those which we have already used above. The correlation matrix tells us which variables are important to least important*
+We have performed a correlation matrix to determine the factors for model one. The variables are those which we have already used above. The correlation matrix tells us which variables are important to least important
 
 
 # Model 1
@@ -561,12 +535,13 @@ drewROC(logit.reg)
 # getRMSE(logit.reg)
 # drewAnova(logit.reg)
 
-# we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable
 
-# difference in deviance =  Null deviance (15177) - 14398 = 872
-
-# From the below confusion matrix for model 1 we see that the accuracy of the model is 11% but the sensitivity is 98% while specificity is 57%. There could be couple of cases to either consider or discard the model. If specificity is the goal then this model is a good fit otherwise, it is not. 
 ```
+-we did regression with/out house we see a minimal affect i.e with house model is predicting 60 true positives without it's predicting 65 and it's not significant, so we decided not to include this variable
+
+-difference in deviance =  Null deviance (15177) - 14398 = 872
+
+-From the below confusion matrix for model 1 we see that the accuracy of the model is 11% but the sensitivity is 98% while specificity is 57%. There could be couple of cases to either consider or discard the model. If specificity is the goal then this model is a good fit otherwise, it is not. 
 
 
 ```{r}
@@ -574,7 +549,7 @@ train_2 = over_train
 train_2 = subset(over_train, select = -c(maintype,subtype,age,noofhouses,noofhousehold,hasThreeHouseHold,OneHouse,moreThanTwoHouse,averageFamily,loners,conservativeFamilies,crusingSeniors,drivenGrowers,grownups,framers,livingWell,retired,successful,MINKM30_c,MINK3045_c,MINK4575_c,MINK7512_c,MINK123M_c,MINKGEM_c,MGEMLEEF_c,MOSHOOFD,MGEMOMV,MAANTHUI,MINKGEM,MGEMLEEF) )
 length(train_2)
 ```
-*Dropping 5 variables that we have used in first regression. and dummies we have created earlier.*
+Dropping 5 variables that we have used in first regression. and dummies we have created earlier.
 
 
 ```{r}
@@ -584,10 +559,8 @@ new_df[,i] <- as.integer(new_df[,i])
 }
 ```
 
-
 # Model 2 | Building model using correlation Analysis
-
-*Now we build model number 2 which will also use correlation matrix but this time we want to remove variables that are highly correlated and get those variables which are less correlated hence have a good impact on the response variable and its predictors. We are removing such variables step by step and explaining why are we doing that. *
+Now we build model number 2 which will also use correlation matrix but this time we want to remove variables that are highly correlated and get those variables which are less correlated hence have a good impact on the response variable and its predictors. We are removing such variables step by step and explaining why are we doing that.
 
 Pre processing
 ```{r}
@@ -596,18 +569,15 @@ dfr = new_df[, !zv]
 n=length(colnames(dfr))
 correlationMatrix = cor(dfr[,1:n],use="complete.obs")
 summary(correlationMatrix[upper.tri(correlationMatrix)])
-
-# After removing our suspected predictors we still have strong positive correlation with 1% and strong negative corelation with 99.9%, we need to find which of them are highly correlated
 ```
+After removing our suspected predictors we still have strong positive correlation with 1% and strong negative corelation with 99.9%, we need to find which of them are highly correlated
 
 ```{r}
 high = findCorrelation(correlationMatrix, cutoff = 0.75, names = TRUE)
 high
-# there are 26 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable.
-
-# The reason we why we have chose cut-off value of .75 is because it gives us variables that are strongly correlated with each other
 length(high)
 ```
+ there are 26 variables which are correlated with each other, before dropping them we need to see how they are correlated with response variable. The reason we why we have chose cut-off value of .75 is because it gives us variables that are strongly correlated with each other
 
 
 ```{r}
@@ -621,9 +591,8 @@ excludedVariables = row.names(cor_df[cor_df$CARAVAN < 0.1, ,drop=F])
 excludedVariables
 
 paste0("excluding total variables from main data set ", length(excludedVariables))
-
-# There are 24 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them. These 24 variables are from 26 variables from the above
 ```
+There are 24 variables which are less correlated with response variable and having correlation coefficient less than 0.1 so we will exclude them. These 24 variables are from 26 variables from the above
 
 
 ```{r}
@@ -639,6 +608,12 @@ length(train_2)
 
 # we have reduce dimension from 86 to 57
 ```
+
+24 + 5 (predictors in mode l) = 29
+
+around 29 variables have been excluded from set so far next step would be to find good predictors which are not highly correlated each other and are significant.
+
+we have reduce dimension from 86 to 57
 
 
 ```{r}
@@ -668,14 +643,10 @@ for (i in colnames(new_train_2)){
     cor_response[cor_response$ind_var == i, "p_values"] = cor_test$p.value
 }
 cor_response[order(cor_response$cor_coeff, decreasing = T),]
-
-# options(scipen = 999)
-
-# Here we are seeing the remaining variable's and seeing their significance level with our response variables and all of the variables are significant at .05. 
-
-# Now we will further plot a correlation matrix to make sure there is no co-linearity among the variables with respect to our response variable 
 ```
+Here we are seeing the remaining variable's and seeing their significance level with our response variables and all of the variables are significant at .05. 
 
+Now we will further plot a correlation matrix to make sure there is no co-linearity among the variables with respect to our response variable 
 
 ```{r}
 corrplot(cor(subset(new_train_2 , select = c(-CARAVAN))), method = "square", type = "upper")
@@ -690,39 +661,28 @@ cor(df_train[ , c("PPERSAUT", "APERSAUT")], df_train[ , "CARAVAN"])
 
 train_2 = data.frame(train_2[ , !colnames(train_2) %in% c("APERSAUT")])
 paste0("after removing APERSAUT dimension is", length(train_2))
-
-# There is a high correlation between car policies and number of car policies which we will exclude as variables which have less correlation with response variable. It's not always necessary to see how much it relates which response variable but it's good as if it tells us how much response variable changes for given predictor. Contribution car policies is more correlated with response variable so we exclude Number of car policies
 ```
+There is a high correlation between car policies and number of car policies which we will exclude as variables which have less correlation with response variable. It's not always necessary to see how much it relates which response variable but it's good as if it tells us how much response variable changes for given predictor. Contribution car policies is more correlated with response variable so we exclude Number of car policies
 
 
 ```{r}
 # final variable selected
 names(train_2)
 length(train_2)
-
-# After having removed all the variables which are highly correlated with each other we are left with 56 variables of importance 
 ```
-
+After having removed all the variables which are highly correlated with each other we are left with 56 variables of importance 
 
 ```{r}
 step.wise1 = glm(CARAVAN ~ ., data = train_2, family = binomial(link = "logit"))
 summary(step.wise1)
 # difference between null deviance. = 15177 - 12386 = 2791
 # step(step.wise1, direction = "backwards")
-
-# Here we have applied GLM to our 56 variables, because it must be remembered that our dataset is categorical in nature. 
 ```
-*After having run the regression we have see that most of the variables are significant. This means that the dimension reduction we took earlier is helping us to come up with a good model*
+Here we have applied GLM to our 56 variables, because it must be remembered that our dataset is categorical in nature. After having run the regression we have see that most of the variables are significant. This means that the dimension reduction we took earlier is helping us to come up with a good model
 
-```{r}
+Now we went one step further and applied a step-wise backwards regression which further helped us reduce variables from 56 to 41 variables with error in null deviance to 2783
 
-# after running backward dimension has reduce to from 56 to 41 variables
-# null deviance = 15177 - 12394 = 2783
-```
-
-*Now we went one step further and applied a step-wise backwards regression which further helped us reduce variables*
-
-*In the next step we will take the 41 variables which we got from step-wise*
+In the next step we will take the 41 variables which we got from step-wise
 
 ```{r}
 for(i in 1:ncol(train_2)){
@@ -733,10 +693,6 @@ train_2[,i] <- as.factor(train_2[,i])
 
 # Model 2
 ```{r}
-# model.2 = glm(formula = CARAVAN ~ MAANTHUI + MGEMOMV + MGEMLEEF + MOSHOOFD + 
-#     MGODRK + MGODPR + MGODOV + MGODGE + MRELGE + MRELSA + MFWEKIND + MOPLMIDD, family = binomial(link = "logit"), data = train_2)
-
-
 model.2 = glm(formula = CARAVAN ~ MOSTYPE + MGODRK + MGODPR + MGODOV + 
     MRELGE + MRELSA + MOPLMIDD + MOPLLAAG + MBERHOOG + MBERZELF + 
     MBERBOER + MBERMIDD + MBERARBG + MBERARBO + MSKC + MSKD + 
@@ -773,9 +729,8 @@ Now will create another model which would be our 3rd model. This model is based 
 
 ```{r}
 corrplot(cor(subset(df_train , select = c("PBRAND", "MOSTYPE", "PPERSAUT", "MKOOPKLA", "MHKOOP", "CARAVAN"))), method = "number", type = "upper")
-
-# Simply put, we ran a corerelation matrix among the variables of interest based on our domain knowledge and achieved the following matrix:
 ```
+Simply put, we ran a corerelation matrix among the variables of interest based on our domain knowledge and achieved the following matrix
 
 ```{r}
 train_3 = over_train
